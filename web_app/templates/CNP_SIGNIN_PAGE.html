@@ -1,0 +1,252 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sign Up - NewsPortal</title>
+    <link href="https://fonts.googleapis.com/css2?family=Open+Sans:wght@400;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="{{ url_for('static', filename='style_signin.css') }}">
+</head>
+<body>
+    <div class="signup-wrapper">
+        <!-- Bagian Kiri: Sign Up Form -->
+        <div class="form-section">
+            <div class="signup-header">
+                <h2>USER SIGN UP</h2>
+                <p>Create your NewsPortal account</p>
+            </div>
+
+            <div id="alertMessage" class="alert"></div>
+            
+            <form id="signupForm">
+                <div class="form-group">
+                    <div class="name-fields">
+                        <div>
+                            <label for="firstName">Nama Depan</label>
+                            <input 
+                                type="text" 
+                                id="firstName" 
+                                class="input-field" 
+                                placeholder="Nama depan"
+                                required
+                            >
+                        </div>
+                        <div>
+                            <label for="lastName">Nama Belakang</label>
+                            <input 
+                                type="text" 
+                                id="lastName" 
+                                class="input-field" 
+                                placeholder="Nama belakang"
+                                required
+                            >
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="form-group">
+                    <label for="email">Email</label>
+                    <input 
+                        type="email" 
+                        id="email" 
+                        class="input-field" 
+                        placeholder="Masukkan email Anda"
+                        required
+                    >
+                </div>
+                
+                <div class="form-group">
+                    <label for="password">Password</label>
+                    <div class="password-toggle">
+                        <input 
+                            type="password" 
+                            id="password" 
+                            class="input-field" 
+                            placeholder="Buat password (min. 6 karakter)"
+                            required
+                        >
+                        <button type="button" class="toggle-icon" id="togglePassword">👁️</button>
+                    </div>
+                </div>
+                
+                <div class="form-group">
+                    <label for="confirmPassword">Konfirmasi Password</label>
+                    <div class="password-toggle">
+                        <input 
+                            type="password" 
+                            id="confirmPassword" 
+                            class="input-field" 
+                            placeholder="Ulangi password Anda"
+                            required
+                        >
+                        <button type="button" class="toggle-icon" id="toggleConfirmPassword">👁️</button>
+                    </div>
+                </div>
+                
+                <div class="terms-group">
+                    <input type="checkbox" id="terms" required>
+                    <label for="terms">
+                        Saya menyetujui <a href="/terms">Syarat & Ketentuan</a> dan 
+                        <a href="/privacy">Kebijakan Privasi</a> NewsPortal
+                    </label>
+                </div>
+                
+                <button type="submit" class="signup-btn" id="signupBtn">
+                    DAFTAR
+                </button>
+            </form>
+            
+            <div class="signup-footer">
+                <p>Sudah punya akun? <a href="/login">Login di sini</a></p>
+            </div>
+        </div>
+
+        <!-- Bagian Kanan: Welcome Message -->
+        <div class="welcome-section">
+            <h1>Welcome to NewsPortal</h1>
+            <p>Kategorisasi berita lebih mudah dan cepat!</p>
+            <p>Sistem kami otomatis mengelompokkan berita sesuai topiknya biar kamu gak ketinggalan info penting</p>
+            <p>Login dulu ga login maka tak sayang</p>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const signupForm = document.getElementById('signupForm');
+            const firstNameInput = document.getElementById('firstName');
+            const lastNameInput = document.getElementById('lastName');
+            const emailInput = document.getElementById('email');
+            const passwordInput = document.getElementById('password');
+            const confirmPasswordInput = document.getElementById('confirmPassword');
+            const togglePassword = document.getElementById('togglePassword');
+            const toggleConfirmPassword = document.getElementById('toggleConfirmPassword');
+            const signupBtn = document.getElementById('signupBtn');
+            const alertMessage = document.getElementById('alertMessage');
+
+            // Toggle password visibility
+            togglePassword.addEventListener('click', function() {
+                const type = passwordInput.getAttribute('type') === 'password' ? 'text' : 'password';
+                passwordInput.setAttribute('type', type);
+                this.textContent = type === 'password' ? '👁️' : '🔒';
+            });
+
+            toggleConfirmPassword.addEventListener('click', function() {
+                const type = confirmPasswordInput.getAttribute('type') === 'password' ? 'text' : 'password';
+                confirmPasswordInput.setAttribute('type', type);
+                this.textContent = type === 'password' ? '👁️' : '🔒';
+            });
+
+            function showAlert(message, type) {
+                alertMessage.textContent = message;
+                alertMessage.className = `alert alert-${type}`;
+                alertMessage.style.display = 'block';
+                
+                setTimeout(() => {
+                    alertMessage.style.display = 'none';
+                }, 5000);
+            }
+
+            function validatePassword(password) {
+                return password.length >= 6;
+            }
+
+            function validateConfirmPassword(password, confirmPassword) {
+                return password === confirmPassword;
+            }
+
+            // Real-time validation
+            passwordInput.addEventListener('input', function() {
+                if (!validatePassword(this.value)) {
+                    this.style.borderColor = '#ef4444';
+                } else {
+                    this.style.borderColor = '#00A82D';
+                }
+            });
+
+            confirmPasswordInput.addEventListener('input', function() {
+                if (!validateConfirmPassword(passwordInput.value, this.value)) {
+                    this.style.borderColor = '#ef4444';
+                } else {
+                    this.style.borderColor = '#00A82D';
+                }
+            });
+
+            // Form submission
+            signupForm.addEventListener('submit', async function(e) {
+                e.preventDefault();
+                
+                const firstName = firstNameInput.value;
+                const lastName = lastNameInput.value;
+                const email = emailInput.value;
+                const password = passwordInput.value;
+                const confirmPassword = confirmPasswordInput.value;
+                const termsAccepted = document.getElementById('terms').checked;
+                
+                // Validation
+                if (!firstName || !lastName) {
+                    showAlert('Nama depan dan belakang harus diisi', 'error');
+                    return;
+                }
+                
+                if (!email) {
+                    showAlert('Email harus diisi', 'error');
+                    return;
+                }
+                
+                if (!validatePassword(password)) {
+                    showAlert('Password minimal 6 karakter', 'error');
+                    return;
+                }
+                
+                if (!validateConfirmPassword(password, confirmPassword)) {
+                    showAlert('Password tidak cocok', 'error');
+                    return;
+                }
+                
+                if (!termsAccepted) {
+                    showAlert('Anda harus menyetujui Syarat & Ketentuan', 'error');
+                    return;
+                }
+
+                // Show loading
+                signupBtn.innerHTML = 'Loading...';
+                signupBtn.disabled = true;
+
+                try {
+                    const response = await fetch('/api/signup', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                        },
+                        body: JSON.stringify({
+                            email: email,
+                            password: password,
+                            first_name: firstName,
+                            last_name: lastName
+                        })
+                    });
+
+                    const data = await response.json();
+
+                    if (data.success) {
+                        showAlert('Pendaftaran berhasil! Redirecting...', 'success');
+                        setTimeout(() => {
+                            window.location.href = '/';
+                        }, 1000);
+                    } else {
+                        showAlert(data.message, 'error');
+                    }
+                } catch (error) {
+                    showAlert('Terjadi kesalahan sistem', 'error');
+                    console.error('Signup error:', error);
+                } finally {
+                    // Reset button
+                    signupBtn.innerHTML = 'DAFTAR';
+                    signupBtn.disabled = false;
+                }
+            });
+        });
+    </script>
+</body>
+</html>

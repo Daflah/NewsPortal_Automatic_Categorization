@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login - NewsPortal</title>
+    <link href="https://fonts.googleapis.com/css2?family=Open+Sans:wght@400;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="{{ url_for('static', filename='style_login.css') }}">
+</head>
+<body>
+    <div class="login-wrapper">
+        <!-- Bagian Kiri: Welcome Message -->
+        <div class="welcome-section">
+            <h1>Welcome to NewsPortal</h1>
+            <p>Kategorisasi berita lebih mudah dan cepat!</p>
+            <p>Sistem kami otomatis mengelompokkan berita sesuai topiknya biar kamu gak ketinggalan info penting</p>
+            <p>Login dulu ga login maka tak sayang</p>
+        </div>
+        
+        <!-- Bagian Kanan: Login Form -->
+        <div class="login-section">
+            <div class="login-header">
+                <h2>USER LOGIN</h2>
+                <p>Welcome back to NewsPortal</p>
+            </div>
+
+            <div id="alertMessage" class="alert"></div>
+            
+            <form id="loginForm">
+                <div class="form-group">
+                    <label for="email">Email</label>
+                    <input 
+                        type="email" 
+                        id="email" 
+                        class="input-field" 
+                        placeholder="Masukkan email Anda"
+                        required
+                    >
+                </div>
+                
+                <div class="form-group">
+                    <label for="password">Password</label>
+                    <div class="password-toggle">
+                        <input 
+                            type="password" 
+                            id="password" 
+                            class="input-field" 
+                            placeholder="Masukkan password Anda"
+                            required
+                        >
+                        <button type="button" class="toggle-icon" id="togglePassword">👁️</button>
+                    </div>
+                </div>
+                
+                <button type="submit" class="login-btn" id="loginBtn">
+                    LOGIN
+                </button>
+            </form>
+            
+            <div class="login-footer">
+                <p>Belum punya akun? <a href="/signup">Daftar di sini</a></p>
+                <p><a href="/forgot-password">Lupa password?</a></p>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const loginForm = document.getElementById('loginForm');
+            const emailInput = document.getElementById('email');
+            const passwordInput = document.getElementById('password');
+            const togglePassword = document.getElementById('togglePassword');
+            const loginBtn = document.getElementById('loginBtn');
+            const alertMessage = document.getElementById('alertMessage');
+
+            // Toggle password visibility
+            togglePassword.addEventListener('click', function() {
+                const type = passwordInput.getAttribute('type') === 'password' ? 'text' : 'password';
+                passwordInput.setAttribute('type', type);
+                this.textContent = type === 'password' ? '👁️' : '🔒';
+            });
+
+            function showAlert(message, type) {
+                alertMessage.textContent = message;
+                alertMessage.className = `alert alert-${type}`;
+                alertMessage.style.display = 'block';
+                
+                setTimeout(() => {
+                    alertMessage.style.display = 'none';
+                }, 5000);
+            }
+
+            // Form submission
+            loginForm.addEventListener('submit', async function(e) {
+                e.preventDefault();
+                
+                const email = emailInput.value;
+                const password = passwordInput.value;
+                
+                if (!email || !password) {
+                    showAlert('Email dan password harus diisi', 'error');
+                    return;
+                }
+
+                // Show loading
+                loginBtn.innerHTML = 'Loading...';
+                loginBtn.disabled = true;
+
+                try {
+                    const response = await fetch('/api/login', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                        },
+                        body: JSON.stringify({
+                            email: email,
+                            password: password
+                        })
+                    });
+
+                    const data = await response.json();
+
+                    if (data.success) {
+                        showAlert('Login berhasil! Redirecting...', 'success');
+                        setTimeout(() => {
+                            window.location.href = '/';
+                        }, 1000);
+                    } else {
+                        showAlert(data.message, 'error');
+                    }
+                } catch (error) {
+                    showAlert('Terjadi kesalahan sistem', 'error');
+                    console.error('Login error:', error);
+                } finally {
+                    // Reset button
+                    loginBtn.innerHTML = 'LOGIN';
+                    loginBtn.disabled = false;
+                }
+            });
+
+            // Enter key to submit
+            passwordInput.addEventListener('keypress', function(e) {
+                if (e.key === 'Enter') {
+                    loginForm.dispatchEvent(new Event('submit'));
+                }
+            });
+        });
+    </script>
+</body>
+</html>

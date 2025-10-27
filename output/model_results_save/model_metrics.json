@@ -1,0 +1,65 @@
+{
+  "accuracy": 0.7297297297297297,
+  "cross_validation_mean": 0.7146585817204176,
+  "cross_validation_std": 0.008746540387703991,
+  "cross_validation_scores": [
+    0.7148194271481942,
+    0.702988792029888,
+    0.7285180572851806,
+    0.7185554171855542,
+    0.708411214953271
+  ],
+  "feature_importance": [
+    {
+      "Topic": "Topic_8",
+      "Importance": 0.15414002116819617
+    },
+    {
+      "Topic": "Topic_2",
+      "Importance": 0.1384934602145406
+    },
+    {
+      "Topic": "Topic_9",
+      "Importance": 0.12663670197111027
+    },
+    {
+      "Topic": "Topic_6",
+      "Importance": 0.11700912885986624
+    },
+    {
+      "Topic": "Topic_3",
+      "Importance": 0.11431316512016773
+    },
+    {
+      "Topic": "Topic_1",
+      "Importance": 0.10611087955987696
+    },
+    {
+      "Topic": "Topic_7",
+      "Importance": 0.09855699504918228
+    },
+    {
+      "Topic": "Topic_5",
+      "Importance": 0.07508232277838069
+    },
+    {
+      "Topic": "Topic_4",
+      "Importance": 0.06965732527867902
+    }
+  ],
+  "label_mapping": {
+    "Edukasi": 0,
+    "Finance": 1,
+    "Health": 2,
+    "Lifestyle": 3,
+    "Nasional": 4,
+    "Otomotif": 5,
+    "Sport": 6,
+    "Teknologi": 7,
+    "Travel": 8
+  },
+  "model_parameters": {
+    "n_estimators": 100,
+    "random_state": 42
+  }
+}

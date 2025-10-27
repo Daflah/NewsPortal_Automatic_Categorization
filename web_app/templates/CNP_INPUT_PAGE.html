@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>News Portal - Upload News</title>
+    <link href="https://fonts.googleapis.com/css2?family=Open+Sans:wght@400;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="{{ url_for('static', filename='style_input.css') }}">
+</head>
+<body>
+    <!-- Header dengan Navbar Sama Persis -->
+    <header>
+        <div class="container header-content">
+            <a href="/" class="logo">
+                <svg width="32" height="32" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M16 30C23.732 30 30 23.732 30 16C30 8.26801 23.732 2 16 2C8.26801 2 2 8.26801 2 16C2 23.732 8.26801 30 16 30Z" stroke="white" stroke-width="2"/>
+                    <path d="M15.9999 22.3999C19.5345 22.3999 22.3999 19.5345 22.3999 15.9999C22.3999 12.4653 19.5345 9.59985 15.9999 9.59985C12.4653 9.59985 9.59985 12.4653 9.59985 15.9999C9.59985 19.5345 12.4653 22.3999 15.9999 22.3999Z" stroke="white" stroke-width="2"/>
+                    <path d="M16 19.2C17.7673 19.2 19.2 17.7673 19.2 16C19.2 14.2327 17.7673 12.8 16 12.8C14.2327 12.8 12.8 14.2327 12.8 16C12.8 17.7673 14.2327 19.2 16 19.2Z" fill="white"/>
+                </svg>
+                NewsPortal
+            </a>
+            <nav>
+                <ul>
+                    <li><a href="/"><i class="fas fa-home"></i> Home</a></li>
+                    <li><a href="/#latest"><i class="fas fa-newspaper"></i> Latest News</a></li>
+                    <li><a href="/#categories"><i class="fas fa-list"></i> Categories</a></li>
+                    <li><a href="/#about"><i class="fas fa-info-circle"></i> About</a></li>
+                    <li><a href="/input"><i class="fas fa-upload"></i> Upload News</a></li>
+                    
+                    <!-- 🔐 LOGIN/LOGOUT BUTTON -->
+                    {% if user %}
+                    <li>
+                        <div class="user-info-header">
+                            <span class="user-name"><i class="fas fa-user"></i> {{ user.name }}</span>
+                            <a href="/logout" class="logout-btn">
+                                <i class="fas fa-sign-out-alt"></i> Logout
+                            </a>
+                        </div>
+                    </li>
+                    {% else %}
+                    <li>
+                        <a href="/login" class="login-btn-nav">
+                            <i class="fas fa-sign-in-alt"></i> Login
+                        </a>
+                    </li>
+                    {% endif %}
+                </ul>
+            </nav>
+        </div>
+    </header>
+
+    <!-- Main Content - LANGSUNG KE FORM -->
+    <main class="container">
+        <!-- News Submission Form -->
+        <section class="form-container" id="form">
+            <h2 class="form-title">Submit Your News Article</h2>
+            <form id="newsForm" action="/submit_news" method="POST">
+                <div class="form-group">
+                    <label for="headline">News Headline</label>
+                    <input type="text" id="headline" name="headline" placeholder="Enter news headline here…" required>
+                </div>
+                
+                <div class="form-group">
+                    <label for="article">News Article</label>
+                    <textarea id="article" name="article" placeholder="Write your news article here…" required></textarea>
+                </div>
+                
+                <button type="submit" class="submit-btn">Submit News Article</button>
+            </form>
+        </section>
+    </main>
+
+    <!-- Footer -->
+    <footer>
+        <div class="container footer-content">
+            <div class="footer-section">
+                <h3>NewsPortal AI</h3>
+                <p>Platform berita cerdas dengan teknologi AI untuk klasifikasi otomatis</p>
+            </div>
+            
+            <div class="footer-section">
+                <h3>Quick Links</h3>
+                <ul>
+                    <li><a href="/">Home</a></li>
+                    <li><a href="/#categories">News Categories</a></li>
+                    <li><a href="/submit_news">Submit News</a></li>
+                    <li><a href="/#about">Careers</a></li>
+                </ul>
+            </div>
+            
+            <div class="footer-section">
+                <h3>Legal</h3>
+                <ul>
+                    <li><a href="#">Terms of Service</a></li>
+                    <li><a href="#">Privacy Policy</a></li>
+                    <li><a href="#">Cookie Policy</a></li>
+                </ul>
+            </div>
+        </div>
+        
+        <div class="copyright container">
+            <p>&copy; 2025 NewsPortal By Daflah Tsany Gusra. Powered by Flask, PostgreSQL, Python, Pickle & Machine Learning.</p>
+        </div>
+    </footer>
+
+    <script>
+        document.getElementById('newsForm').addEventListener('submit', function(e) {
+            // Tampilkan loading indicator
+            const submitBtn = this.querySelector('.submit-btn');
+            submitBtn.textContent = 'Processing...';
+            submitBtn.disabled = true;
+        });
+
+        // Smooth scroll untuk anchor links
+        document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+            anchor.addEventListener('click', function (e) {
+                e.preventDefault();
+                const target = document.querySelector(this.getAttribute('href'));
+                if (target) {
+                    const headerHeight = document.querySelector('header').offsetHeight;
+                    const targetPosition = target.getBoundingClientRect().top + window.pageYOffset - headerHeight;
+                    
+                    window.scrollTo({
+                        top: targetPosition,
+                        behavior: 'smooth'
+                    });
+                }
+            });
+        });
+    </script>
+</body>
+</html>

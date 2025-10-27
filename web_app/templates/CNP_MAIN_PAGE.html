@@ -1,0 +1,420 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NewsPortal - Berita Terkini</title>
+    <link href="https://fonts.googleapis.com/css2?family=Open+Sans:wght@400;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="{{ url_for('static', filename='style_main.css') }}">
+</head>
+<body>
+    <!-- Header -->
+    <header>
+        <div class="container header-content">
+            <a href="/" class="logo">
+                <svg width="32" height="32" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M16 30C23.732 30 30 23.732 30 16C30 8.26801 23.732 2 16 2C8.26801 2 2 8.26801 2 16C2 23.732 8.26801 30 16 30Z" stroke="white" stroke-width="2"/>
+                    <path d="M15.9999 22.3999C19.5345 22.3999 22.3999 19.5345 22.3999 15.9999C22.3999 12.4653 19.5345 9.59985 15.9999 9.59985C12.4653 9.59985 9.59985 12.4653 9.59985 15.9999C9.59985 19.5345 12.4653 22.3999 15.9999 22.3999Z" stroke="white" stroke-width="2"/>
+                    <path d="M16 19.2C17.7673 19.2 19.2 17.7673 19.2 16C19.2 14.2327 17.7673 12.8 16 12.8C14.2327 12.8 12.8 14.2327 12.8 16C12.8 17.7673 14.2327 19.2 16 19.2Z" fill="white"/>
+                </svg>
+                NewsPortal
+            </a>
+            <nav>
+                <ul>
+                    <li><a href="#home"><i class="fas fa-home"></i> Home</a></li>
+                    <li><a href="#latest"><i class="fas fa-newspaper"></i> Latest News</a></li>
+                    <li><a href="#categories"><i class="fas fa-list"></i> Categories</a></li>
+                    <li><a href="#about"><i class="fas fa-info-circle"></i> About</a></li>
+                    <li><a href="/input"><i class="fas fa-upload"></i> Upload News</a></li>
+                    
+                    <!-- 🔐 LOGIN/LOGOUT BUTTON -->
+                    {% if user %}
+                    <li>
+                        <div class="user-info-header">
+                            <span class="user-name"><i class="fas fa-user"></i> {{ user.name }}</span>
+                            <a href="/logout" class="logout-btn">
+                                <i class="fas fa-sign-out-alt"></i> Logout
+                            </a>
+                        </div>
+                    </li>
+                    {% else %}
+                    <li>
+                        <a href="/login" class="login-btn-nav">
+                            <i class="fas fa-sign-in-alt"></i> Login
+                        </a>
+                    </li>
+                    {% endif %}
+                </ul>
+            </nav>
+        </div>
+    </header>
+
+    <!-- Hero Section -->
+    <section class="hero" id="home">
+        <div class="container">
+            <h1>Share Your Story With The World</h1>
+            <p>Submit your news articles and be part of our global news community.<br>Quality journalism matters.</p>
+            <div class="cta-buttons">
+                <a href="/input" class="cta-button">
+                    <i class="fas fa-upload"></i> Submit News
+                </a>
+                <a href="#latest" class="cta-button outline">
+                    <i class="fas fa-newspaper"></i> Read Latest
+                </a>
+            </div>
+        </div>
+    </section>
+
+    <!-- Database Statistics -->
+    <section class="stats-section">
+        <div class="container">
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <div class="stat-number">{{ stats.total_articles if stats else 0 }}</div>
+                    <div class="stat-label">Total Berita</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-number">{{ categories|length if categories else 0 }}</div>
+                    <div class="stat-label">Kategori</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-number">40.000+</div>
+                    <div class="stat-label">Data Training</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-number">AI</div>
+                    <div class="stat-label">Powered</div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Search Section -->
+    <section class="search-section">
+        <div class="container">
+            <form class="search-form" action="/search" method="GET">
+                <input type="text" 
+                       name="q" 
+                       class="search-input" 
+                       placeholder="Cari berita berdasarkan judul atau konten..." 
+                       value="{{ search_term or '' }}">
+                <button type="submit" class="search-btn">
+                    <i class="fas fa-search"></i> Cari
+                </button>
+            </form>
+        </div>
+    </section>
+
+    <!-- PERBAIKAN: Category Navigation - Grid Layout 5x2 -->
+    <div class="category-nav" id="categories">
+        <div class="container">
+            <div class="category-grid">
+                <!-- Baris 1 - 5 kategori pertama -->
+                <a href="/" class="category-item {% if current_category == 'All' %}active{% endif %}">
+                    <div class="category-icon">
+                        <i class="fas fa-globe-americas"></i>
+                    </div>
+                    <div class="category-name">Semua Berita</div>
+                    <div class="category-count">{{ stats.total_articles if stats else 0 }}</div>
+                </a>
+                {% for category in categories[:4] %}
+                <a href="/category/{{ category.name }}" 
+                class="category-item {% if current_category == category.name %}active{% endif %}">
+                    <div class="category-icon">
+                        {% if category.name == 'Teknologi' %}
+                            <i class="fas fa-microchip"></i>
+                        {% elif category.name == 'Otomotif' %}
+                            <i class="fas fa-car"></i>
+                        {% elif category.name == 'Sport' %}
+                            <i class="fas fa-running"></i>
+                        {% elif category.name == 'Lifestyle' %}
+                            <i class="fas fa-tshirt"></i>
+                        {% elif category.name == 'Finance' %}
+                            <i class="fas fa-chart-line"></i>
+                        {% elif category.name == 'Health' %}
+                            <i class="fas fa-heartbeat"></i>
+                        {% elif category.name == 'Edukasi' %}
+                            <i class="fas fa-graduation-cap"></i>
+                        {% elif category.name == 'Nasional' %}
+                            <i class="fas fa-flag"></i>
+                        {% elif category.name == 'Travel' %}
+                            <i class="fas fa-plane"></i>
+                        {% else %}
+                            <i class="fas fa-newspaper"></i>
+                        {% endif %}
+                    </div>
+                    <div class="category-name">{{ category.name }}</div>
+                    <div class="category-count">{{ category.count }}</div>
+                </a>
+                {% endfor %}
+                
+                <!-- Baris 2 - 5 kategori berikutnya -->
+                {% for category in categories[4:9] %}
+                <a href="/category/{{ category.name }}" 
+                class="category-item {% if current_category == category.name %}active{% endif %}">
+                    <div class="category-icon">
+                        {% if category.name == 'Teknologi' %}
+                            <i class="fas fa-microchip"></i>
+                        {% elif category.name == 'Otomotif' %}
+                            <i class="fas fa-car"></i>
+                        {% elif category.name == 'Sport' %}
+                            <i class="fas fa-running"></i>
+                        {% elif category.name == 'Lifestyle' %}
+                            <i class="fas fa-tshirt"></i>
+                        {% elif category.name == 'Finance' %}
+                            <i class="fas fa-chart-line"></i>
+                        {% elif category.name == 'Health' %}
+                            <i class="fas fa-heartbeat"></i>
+                        {% elif category.name == 'Edukasi' %}
+                            <i class="fas fa-graduation-cap"></i>
+                        {% elif category.name == 'Nasional' %}
+                            <i class="fas fa-flag"></i>
+                        {% elif category.name == 'Travel' %}
+                            <i class="fas fa-plane"></i>
+                        {% else %}
+                            <i class="fas fa-newspaper"></i>
+                        {% endif %}
+                    </div>
+                    <div class="category-name">{{ category.name }}</div>
+                    <div class="category-count">{{ category.count }}</div>
+                </a>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+
+    <!-- Main Content -->
+    <main class="container">
+        <!-- Latest News Section -->
+        <section class="news-section" id="latest">
+            <h2 class="section-title">
+                {% if current_category == 'All' %}
+                    Berita Terbaru
+                {% elif current_category == 'Search' %}
+                    Hasil Pencarian: "{{ search_term }}"
+                {% else %}
+                    Berita {{ current_category }}
+                {% endif %}
+            </h2>
+
+            {% if articles %}
+            <div class="news-grid">
+                {% for article in articles %}
+                <div class="news-card">
+                    <div class="news-header">
+                        <div class="news-icon">
+                            {% if article.category == 'Teknologi' %}
+                                <i class="fas fa-microchip"></i>
+                            {% elif article.category == 'Otomotif' %}
+                                <i class="fas fa-car"></i>
+                            {% elif article.category == 'Sport' %}
+                                <i class="fas fa-running"></i>
+                            {% elif article.category == 'Lifestyle' %}
+                                <i class="fas fa-tshirt"></i>
+                            {% elif article.category == 'Finance' %}
+                                <i class="fas fa-chart-line"></i>
+                            {% elif article.category == 'Health' %}
+                                <i class="fas fa-heartbeat"></i>
+                            {% elif article.category == 'Edukasi' %}
+                                <i class="fas fa-graduation-cap"></i>
+                            {% elif article.category == 'Nasional' %}
+                                <i class="fas fa-flag"></i>
+                            {% elif article.category == 'Travel' %}
+                                <i class="fas fa-plane"></i>
+                            {% else %}
+                                <i class="fas fa-newspaper"></i>
+                            {% endif %}
+                        </div>
+                        <div class="news-title-content">
+                            <h3 class="news-title">
+                                <a href="/article/{{ article.id }}">
+                                    {{ article.title }}
+                                </a>
+                            </h3>
+                            <div class="news-time">
+                                <i class="far fa-clock"></i> {{ article.time }}
+                            </div>
+                        </div>
+                    </div>
+                    <div class="news-content">
+                        <p class="news-excerpt">
+                            {{ article.content[:150] }}{% if article.content|length > 150 %}...{% endif %}
+                        </p>
+                        <span class="news-category">{{ article.category }}</span>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+            {% else %}
+            <div class="no-articles">
+                <i class="fas fa-newspaper"></i>
+                <h3>Tidak Ada Berita Ditemukan</h3>
+                <p>
+                    {% if current_category == 'Search' %}
+                        Tidak ada berita yang sesuai dengan pencarian "{{ search_term }}". Coba kata kunci lain atau <a href="/">lihat semua berita</a>.
+                    {% else %}
+                        Belum ada berita yang tersedia untuk kategori ini. <a href="/">Kembali ke beranda</a>.
+                    {% endif %}
+                </p>
+            </div>
+            {% endif %}
+        </section>
+
+        <!-- About Section -->
+        <section class="about-section" id="about">
+            <div class="about-content">
+                <div class="about-text">
+                    <h2>About NewsPortal</h2>
+                    <p>NewsPortal adalah platform berita yang dikembangkan oleh Daflah Tsany Gusra, mahasiswa Teknik Informatika Universitas Tarumanagara, sebagai bagian dari tugas akhir. Proyek ini dibimbing oleh Ibu Ir. Jeanny Pragantha, M.Eng. dan Bapak Novario Jaya Perdana, S.Kom., M.T.</p>
+                    <p>Website ini menggunakan dua metode Machine Learning, Latent Dirichlet Allocation (LDA) dan Random Forest untuk menganalisis dan mengelompokkan berita secara otomatis. NewsPortal menghadirkan cara dalam memahami kategori berita secara cepat.</p>
+                    
+                    <div class="about-stats">
+                        <div class="stat-item">
+                            <div class="stat-number">40.000+</div>
+                            <div class="stat-label">Dataset</div>
+                        </div>
+                        <div class="stat-item">
+                            <div class="stat-number">{{ categories|length if categories else 9 }}</div>
+                            <div class="stat-label">Kategori</div>
+                        </div>
+                        <div class="stat-item">
+                            <div class="stat-number">AI</div>
+                            <div class="stat-label">Machine Learning</div>
+                        </div>
+                        <div class="stat-item">
+                            <div class="stat-number">PostgreSQL</div>
+                            <div class="stat-label">Database</div>
+                        </div>
+                    </div>
+                </div>
+                <div class="about-image">
+                    <div style="
+                        height: 300px;
+                        border-radius: 12px;
+                        overflow: hidden;
+                        display: flex;
+                        align-items: center;
+                        justify-content: center;
+                        background: #ffffff;
+                        border: 1px solid #e0e0e0;
+                        box-shadow: 0 4px 10px rgba(0, 0, 0, 0.08);
+                        transition: all 0.3s ease;
+                    "
+                    onmouseover="this.style.boxShadow='0 6px 16px rgba(0,168,45,0.25)'; this.style.transform='scale(1.02)'"
+                    onmouseout="this.style.boxShadow='0 4px 10px rgba(0,0,0,0.08)'; this.style.transform='scale(1)'">
+                        <img src="https://untar.ac.id/wp-content/uploads/2022/04/Logo-Untar-new.png" 
+                            alt="Logo Universitas Tarumanagara" 
+                            style="max-width: 90%; max-height: 90%; object-fit: contain;">
+                    </div>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <!-- Footer -->
+    <footer>
+        <div class="container">
+            <div class="footer-content">
+                <div class="footer-section">
+                    <h3>NewsPortal AI</h3>
+                    <p>Platform berita cerdas dengan teknologi AI untuk klasifikasi otomatis</p>
+                </div>
+                
+                <div class="footer-section">
+                    <h3>Quick Links</h3>
+                    <ul>
+                        <li><a href="/">Home</a></li>
+                        <li><a href="/input">Submit News</a></li>
+                        <li><a href="#categories">News Categories</a></li>
+                        <li><a href="#about">About System</a></li>
+                    </ul>   
+                </div>
+                
+                <div class="footer-section">
+                    <h3>Categories</h3>
+                    <ul>
+                        {% for category in categories[:8] %}
+                        <li><a href="/category/{{ category.name }}">{{ category.name }}</a></li>
+                        {% endfor %}
+                    </ul>
+                </div>
+            </div>
+            
+            <div class="copyright">
+                <p>&copy; 2025 NewsPortal By Daflah Tsany Gusra. Powered by Flask, PostgreSQL, Python, Pickle & Machine Learning.</p>
+            </div>
+        </div>
+    </footer>
+
+    <script>
+        // Smooth scroll untuk semua anchor links
+        document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+            anchor.addEventListener('click', function (e) {
+                // Skip jika href adalah "#" saja
+                if (this.getAttribute('href') === '#') return;
+                
+                e.preventDefault();
+                const targetId = this.getAttribute('href').substring(1);
+                const target = document.getElementById(targetId);
+                
+                if (target) {
+                    // Hitung offset untuk navbar sticky
+                    const headerHeight = document.querySelector('header').offsetHeight;
+                    const targetPosition = target.getBoundingClientRect().top + window.pageYOffset - headerHeight;
+                    
+                    window.scrollTo({
+                        top: targetPosition,
+                        behavior: 'smooth'
+                    });
+                    
+                    // Update URL tanpa reload page
+                    history.pushState(null, null, `#${targetId}`);
+                }
+            });
+        });
+
+        // Active state untuk category navigation
+        document.querySelectorAll('.category-item').forEach(item => {
+            item.addEventListener('click', function(e) {
+                // Remove active class from all category items
+                document.querySelectorAll('.category-item').forEach(i => i.classList.remove('active'));
+                // Add active class to clicked item
+                this.classList.add('active');
+            });
+        });
+
+        // Auto-focus search input
+        document.addEventListener('DOMContentLoaded', function() {
+            const searchInput = document.querySelector('.search-input');
+            if (searchInput) {
+                searchInput.focus();
+            }
+        });
+
+        // Update active nav link berdasarkan scroll position
+        window.addEventListener('scroll', function() {
+            const sections = document.querySelectorAll('section[id], div[id]');
+            const navLinks = document.querySelectorAll('nav ul li a');
+            
+            let current = '';
+            sections.forEach(section => {
+                const sectionTop = section.offsetTop;
+                const sectionHeight = section.clientHeight;
+                const headerHeight = document.querySelector('header').offsetHeight;
+                
+                if (scrollY >= (sectionTop - headerHeight - 50)) {
+                    current = section.getAttribute('id');
+                }
+            });
+
+            navLinks.forEach(link => {
+                link.classList.remove('active');
+                if (link.getAttribute('href') === `#${current}`) {
+                    link.classList.add('active');
+                }
+            });
+        });
+    </script>
+</body>
+</html>

@@ -1,0 +1,358 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{ article.title if article else 'Artikel - NewsPortal' }}</title>
+    <link href="https://fonts.googleapis.com/css2?family=Open+Sans:wght@400;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="{{ url_for('static', filename='style_article.css') }}">
+</head>
+<body>
+    <!-- Header -->
+    <header>
+        <div class="container header-content">
+            <a href="/" class="logo">
+                <svg width="32" height="32" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M16 30C23.732 30 30 23.732 30 16C30 8.26801 23.732 2 16 2C8.26801 2 2 8.26801 2 16C2 23.732 8.26801 30 16 30Z" stroke="white" stroke-width="2"/>
+                    <path d="M15.9999 22.3999C19.5345 22.3999 22.3999 19.5345 22.3999 15.9999C22.3999 12.4653 19.5345 9.59985 15.9999 9.59985C12.4653 9.59985 9.59985 12.4653 9.59985 15.9999C9.59985 19.5345 12.4653 22.3999 15.9999 22.3999Z" stroke="white" stroke-width="2"/>
+                    <path d="M16 19.2C17.7673 19.2 19.2 17.7673 19.2 16C19.2 14.2327 17.7673 12.8 16 12.8C14.2327 12.8 12.8 14.2327 12.8 16C12.8 17.7673 14.2327 19.2 16 19.2Z" fill="white"/>
+                </svg>
+                NewsPortal
+            </a>
+            <nav>
+                <ul>
+                    <li><a href="/"><i class="fas fa-home"></i> Home</a></li>
+                    <li><a href="/#latest"><i class="fas fa-newspaper"></i> Latest News</a></li>
+                    <li><a href="/#categories"><i class="fas fa-list"></i> Categories</a></li>
+                    <li><a href="/#about"><i class="fas fa-info-circle"></i> About</a></li>
+                    <li><a href="/input"><i class="fas fa-upload"></i> Upload News</a></li>
+                    
+                    <!-- 🔐 LOGIN/LOGOUT BUTTON -->
+                    {% if user %}
+                    <li>
+                        <div class="user-info-header">
+                            <span class="user-name"><i class="fas fa-user"></i> {{ user.name }}</span>
+                            <a href="/logout" class="logout-btn">
+                                <i class="fas fa-sign-out-alt"></i> Logout
+                            </a>
+                        </div>
+                    </li>
+                    {% else %}
+                    <li>
+                        <a href="/login" class="login-btn-nav">
+                            <i class="fas fa-sign-in-alt"></i> Login
+                        </a>
+                    </li>
+                    {% endif %}
+                </ul>
+            </nav>
+        </div>
+    </header>
+
+    <!-- Breadcrumb -->
+    <div class="container">
+        <div class="breadcrumb">
+            <a href="/">Home</a>
+            <span>/</span>
+            {% if article %}
+            <a href="/category/{{ article.category }}">{{ article.category }}</a>
+            <span>/</span>
+            <span>{{ article.title[:50] }}{% if article.title|length > 50 %}...{% endif %}</span>
+            {% else %}
+            <span>Artikel Tidak Ditemukan</span>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- Article Content -->
+    <div class="container">
+        {% if article %}
+        <div class="article-container">
+            <div class="article-main">
+                <div class="article-header">
+                    <span class="article-category">{{ article.category }}</span>
+                    <h1 class="article-title">{{ article.title }}</h1>
+                    <div class="article-meta">
+                        <div>
+                            <i class="far fa-clock"></i>
+                            <span>{{ article.time }}</span>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Database Information -->
+                <div class="database-info">
+                    <h4><i class="fas fa-info-circle"></i> Informasi Berita</h4>
+                    <p><strong>Source:</strong> PostgreSQL Database</p>
+                    <p><strong>Category:</strong> {{ article.category }}</p>
+                    <p><strong>Link Asli:</strong> <a href="{{ article.link }}" target="_blank" style="color: #00A82D;">{{ article.link[:50] }}...</a></p>
+                </div>
+                
+                <div class="article-content">
+                    {{ article.content|replace('\n', '<br>')|safe }}
+                </div>
+                
+                <a href="{{ article.link }}" target="_blank" class="article-link">
+                    <i class="fas fa-external-link-alt"></i> Baca Artikel Asli
+                </a>
+                
+                <div class="article-actions">
+                    <button class="action-btn" onclick="shareArticle()"><i class="fas fa-share"></i> Bagikan</button>
+                    <button class="action-btn" onclick="window.open('{{ article.link }}', '_blank')"><i class="fas fa-external-link-alt"></i> Kunjungi Sumber</button>
+                    <button class="action-btn" onclick="window.history.back()"><i class="fas fa-arrow-left"></i> Kembali</button>
+                </div>
+                
+                <div class="author-section">
+                    <div class="article-icon" style="width: 80px; height: 80px; margin-right: 20px;">
+                        {% if article.category == 'Teknologi' %}
+                            <i class="fas fa-microchip" style="font-size: 2rem;"></i>
+                        {% elif article.category == 'Otomotif' %}
+                            <i class="fas fa-car" style="font-size: 2rem;"></i>
+                        {% elif article.category == 'Sport' %}
+                            <i class="fas fa-running" style="font-size: 2rem;"></i>
+                        {% elif article.category == 'Lifestyle' %}
+                            <i class="fas fa-tshirt" style="font-size: 2rem;"></i>
+                        {% elif article.category == 'Finance' %}
+                            <i class="fas fa-chart-line" style="font-size: 2rem;"></i>
+                        {% elif article.category == 'Health' %}
+                            <i class="fas fa-heartbeat" style="font-size: 2rem;"></i>
+                        {% elif article.category == 'Edukasi' %}
+                            <i class="fas fa-graduation-cap" style="font-size: 2rem;"></i>
+                        {% elif article.category == 'Nasional' %}
+                            <i class="fas fa-flag" style="font-size: 2rem;"></i>
+                        {% elif article.category == 'Travel' %}
+                            <i class="fas fa-plane" style="font-size: 2rem;"></i>
+                        {% else %}
+                            <i class="fas fa-newspaper" style="font-size: 2rem;"></i>
+                        {% endif %}
+                    </div>
+                    <div class="author-info">
+                        <h3>Tentang Kategori {{ article.category }}</h3>
+                        <p>
+                            {% if article.category == 'Teknologi' %}
+                                Artikel teknologi membahas inovasi terbaru dalam dunia digital, AI, gadget, dan perkembangan teknologi. NewsPortal terlatih untuk mengenali istilah-istilah teknologi dan trennya
+                            {% elif article.category == 'Otomotif' %}
+                                Kategori otomotif mencakup berita tentang mobil, motor, dan modifikasi kendaraan. NewsPortal ahli dalam mengidentifikasi spesifikasi kendaraan, review produk, dan perkembangan industri otomotif.
+                            {% elif article.category == 'Sport' %}
+                                Berita olahraga meliputi pertandingan, atlet, dan kompetisi terbaru. NewsPortal terlatih mengenali nama atlet, skor pertandingan, dan jenis olahraga dari berbagai cabang.
+                            {% elif article.category == 'Lifestyle' %}
+                                Konten lifestyle membahas gaya hidup, fashion, kuliner, dan tren sosial. NewsPortal dapat mengidentifikasi pola konsumsi, tren budaya pop, dan perkembangan gaya hidup masyarakat.
+                            {% elif article.category == 'Finance' %}
+                                Artikel finansial mencakup investasi, pasar saham, dan ekonomi. NewsPortal terlatih dalam istilah ekonomi, analisis pasar, dan perkembangan keuangan global.
+                            {% elif article.category == 'Health' %}
+                                Kategori kesehatan membahas medis, kebugaran, dan pola hidup sehat. NewsPortal ahli dalam terminologi medis, penelitian kesehatan, dan tips kebugaran.
+                            {% elif article.category == 'Edukasi' %}
+                                Berita pendidikan meliputi akademik, penelitian, dan berita kemajuan akademik. NewsPortal terlatih mengenali istilah akademis, metode pembelajaran, dan kebijakan pendidikan.
+                            {% elif article.category == 'Nasional' %}
+                                Konten nasional membahas politik, kebijakan, dan peristiwa dalam negeri. NewsPortal dapat mengidentifikasi isu-isu politik, nama institusi pemerintah, dan perkembangan nasional.
+                            {% elif article.category == 'Travel' %}
+                                Artikel travel mencakup destinasi wisata, tips perjalanan, dan budaya lokal. AI kami terlatih dalam nama tempat wisata, budaya daerah, dan informasi pariwisata.
+                            {% else %}
+                                Artikel ini diklasifikasikan secara otomatis menggunakan sistem Machine Learning NewsPortal. Sistem AI kami menganalisis konten berita dan mengkategorikannya dengan akurasi tinggi.
+                            {% endif %}
+                        </p>
+                        <div class="social-links">
+                            <span><strong>Powered by:</strong> PostgreSQL + Flask + Python</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="article-sidebar">
+                <div class="sidebar-widget">
+                    <h3>Berita Terkait</h3>
+                    
+                    <!-- Related articles will be loaded via JavaScript -->
+                    <div id="related-articles">
+                        <div class="related-article">
+                            <div class="article-icon">
+                                <i class="fas fa-sync-alt fa-spin"></i>
+                            </div>
+                            <div class="related-article-content">
+                                <h4>Memuat berita terkait...</h4>
+                                <div class="news-time">
+                                    <i class="far fa-clock"></i> Loading
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="sidebar-widget">
+                    <h3>Kategori Lainnya</h3>
+                    <div class="tags">
+                        <a href="/category/Teknologi" class="tag">Teknologi</a>
+                        <a href="/category/Otomotif" class="tag">Otomotif</a>
+                        <a href="/category/Sport" class="tag">Sport</a>
+                        <a href="/category/Lifestyle" class="tag">Lifestyle</a>
+                        <a href="/category/Finance" class="tag">Finance</a>
+                        <a href="/category/Health" class="tag">Health</a>
+                        <a href="/category/Edukasi" class="tag">Edukasi</a>
+                        <a href="/category/Nasional" class="tag">Nasional</a>
+                        <a href="/category/Travel" class="tag">Travel</a>
+                    </div>
+                </div>
+                
+                <div class="sidebar-widget">
+                    <h3>Sistem NewsPortal</h3>
+                    <p><strong>AI Classification:</strong> Random Forest + LDA</p>
+                    <p><strong>Database:</strong> PostgreSQL</p>
+                    <p><strong>Backend:</strong> Flask dan Python</p>
+                    <p><strong>Data:</strong> 40.000+ Artikel</p>
+                    <a href="/input" style="display: block; background-color: #00A82D; color: white; text-align: center; padding: 10px; border-radius: 6px; text-decoration: none; margin-top: 10px;">
+                        <i class="fas fa-upload"></i> Coba Kategorisasi Berita
+                    </a>
+                </div>
+            </div>
+        </div>
+        {% else %}
+        <div class="article-main" style="text-align: center; padding: 60px 30px;">
+            <div class="article-icon" style="width: 100px; height: 100px; margin: 0 auto 20px; background-color: #ff6b6b;">
+                <i class="fas fa-exclamation-triangle" style="font-size: 3rem; color: white;"></i>
+            </div>
+            <h1 class="article-title">Artikel Tidak Ditemukan</h1>
+            <p style="font-size: 1.1rem; color: #718096; margin-bottom: 30px;">
+                Maaf, artikel yang Anda cari tidak ditemukan dalam database kami.
+            </p>
+            <a href="/" class="article-link">
+                <i class="fas fa-arrow-left"></i> Kembali ke Beranda
+            </a>
+        </div>
+        {% endif %}
+    </div>
+
+    <!-- Footer -->
+    <footer>
+        <div class="container">
+            <div class="footer-content">
+                <div class="footer-section">
+                    <h3>NewsPortal AI</h3>
+                    <p>Platform berita cerdas dengan teknologi AI untuk klasifikasi otomatis</p>
+                </div>
+                
+                <div class="footer-section">
+                    <h3>Quick Links</h3>
+                    <ul>
+                        <li><a href="/">Home</a></li>
+                        <li><a href="/input">Submit News</a></li>
+                        <li><a href="/#categories">News Categories</a></li>
+                        <li><a href="/#about">About System</a></li>
+                    </ul>
+                </div>
+                
+                <div class="footer-section">
+                    <h3>Technology Stack</h3>
+                    <ul>
+                        <li><a href="#">PostgreSQL Database</a></li>
+                        <li><a href="#">Flask Backend</a></li>
+                        <li><a href="#">Machine Learning</a></li>
+                        <li><a href="#">Latent Dirichlet Allocation</a></li>
+                    </ul>
+                </div>
+            </div>
+            
+            <div class="copyright">
+                <p>&copy; 2025 NewsPortal By Daflah Tsany Gusra. Powered by Flask, PostgreSQL, Python, Pickle & Machine Learning.</p>
+            </div>
+        </div>
+    </footer>
+
+    <script>
+        // Load related articles
+        async function loadRelatedArticles() {
+            try {
+                const response = await fetch('/api/articles?limit=3');
+                const articles = await response.json();
+                
+                const container = document.getElementById('related-articles');
+                container.innerHTML = '';
+                
+                articles.slice(0, 3).forEach(article => {
+                    const articleElement = document.createElement('a');
+                    articleElement.href = `/article/${article.id}`;
+                    articleElement.className = 'related-article';
+                    
+                    // Get icon based on category
+                    let iconClass = 'fas fa-newspaper';
+                    if (article.category === 'Teknologi') iconClass = 'fas fa-microchip';
+                    else if (article.category === 'Otomotif') iconClass = 'fas fa-car';
+                    else if (article.category === 'Sport') iconClass = 'fas fa-running';
+                    else if (article.category === 'Lifestyle') iconClass = 'fas fa-tshirt';
+                    else if (article.category === 'Finance') iconClass = 'fas fa-chart-line';
+                    else if (article.category === 'Health') iconClass = 'fas fa-heartbeat';
+                    else if (article.category === 'Edukasi') iconClass = 'fas fa-graduation-cap';
+                    else if (article.category === 'Nasional') iconClass = 'fas fa-flag';
+                    else if (article.category === 'Travel') iconClass = 'fas fa-plane';
+                    
+                    articleElement.innerHTML = `
+                        <div class="article-icon">
+                            <i class="${iconClass}"></i>
+                        </div>
+                        <div class="related-article-content">
+                            <h4>${article.title}</h4>
+                            <div class="news-time">
+                                <i class="far fa-clock"></i> ${article.time}
+                            </div>
+                        </div>
+                    `;
+                    
+                    container.appendChild(articleElement);
+                });
+            } catch (error) {
+                console.error('Error loading related articles:', error);
+                document.getElementById('related-articles').innerHTML = `
+                    <div class="related-article">
+                        <div class="article-icon">
+                            <i class="fas fa-exclamation-triangle"></i>
+                        </div>
+                        <div class="related-article-content">
+                            <h4>Gagal memuat berita terkait</h4>
+                            <div class="news-time">
+                                <i class="far fa-clock"></i> Error
+                            </div>
+                        </div>
+                    </div>
+                `;
+            }
+        }
+
+        // Show article function  
+        function shareArticle() {  
+            if (navigator.share) {  
+                navigator.share({  
+                    title: article?.title || 'Artikel HexaPortal',  
+                    text: 'Hexa artikel menarik ini di HexaPortal',  
+                    url: window.location.href  
+                })  
+                .then(() => console.log('Berhasil berbagi'))  
+                .catch((error) => console.log('Error sharing', error));  
+            } else {  
+                // Fallback untuk browser yang tidak support Share API
+                navigator.clipboard.writeText(window.location.href)
+                    .then(() => {
+                        alert('Link artikel telah disalin ke clipboard!');  
+                    })
+                    .catch((error) => {
+                        console.log('Error copying to clipboard', error);
+                        // Fallback tambahan
+                        const textArea = document.createElement('textarea');
+                        textArea.value = window.location.href;
+                        document.body.appendChild(textArea);
+                        textArea.select();
+                        document.execCommand('copy');
+                        document.body.removeChild(textArea);
+                        alert('Link artikel telah disalin ke clipboard!');
+                    });
+            }  
+        }
+
+        // Load related articles ketika page load  
+        document.addEventListener("DOMContentLoaded", function() {  
+            if (article) {  
+                loadRelatedArticles();  
+            }  
+        });
+    </script>
+</body>
+</html>

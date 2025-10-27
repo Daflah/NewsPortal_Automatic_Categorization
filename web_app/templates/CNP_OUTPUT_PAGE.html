@@ -1,0 +1,269 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Hasil Analisis Berita</title>
+    <link href="https://fonts.googleapis.com/css2?family=Open+Sans:wght@400;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="{{ url_for('static', filename='style_output.css') }}">
+</head>
+<body>
+    <!-- Header -->
+    <header>
+        <div class="container header-content">
+            <a href="/" class="logo">
+                <svg width="32" height="32" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M16 30C23.732 30 30 23.732 30 16C30 8.26801 23.732 2 16 2C8.26801 2 2 8.26801 2 16C2 23.732 8.26801 30 16 30Z" stroke="white" stroke-width="2"/>
+                    <path d="M15.9999 22.3999C19.5345 22.3999 22.3999 19.5345 22.3999 15.9999C22.3999 12.4653 19.5345 9.59985 15.9999 9.59985C12.4653 9.59985 9.59985 12.4653 9.59985 15.9999C9.59985 19.5345 12.4653 22.3999 15.9999 22.3999Z" stroke="white" stroke-width="2"/>
+                    <path d="M16 19.2C17.7673 19.2 19.2 17.7673 19.2 16C19.2 14.2327 17.7673 12.8 16 12.8C14.2327 12.8 12.8 14.2327 12.8 16C12.8 17.7673 14.2327 19.2 16 19.2Z" fill="white"/>
+                </svg>
+                NewsPortal
+            </a>
+            <nav>
+                <ul>
+                    <!-- 🔐 LOGIN/LOGOUT BUTTON -->
+                    {% if user %}
+                    <li>
+                        <div class="user-info-header">
+                            <span class="user-name">
+                                <i class="fas fa-user"></i> {{ user.name }}
+                                <span class="user-role {% if user.role == 'admin' %}role-admin{% else %}role-user{% endif %}">
+                                    {{ user.role }}
+                                </span>
+                            </span>
+                            <a href="/logout" class="logout-btn">
+                                <i class="fas fa-sign-out-alt"></i> Logout
+                            </a>
+                        </div>
+                    </li>
+                    {% else %}
+                    <li>
+                        <a href="/login" class="login-btn-nav">
+                            <i class="fas fa-sign-in-alt"></i> Login
+                        </a>
+                    </li>
+                    {% endif %}
+                </ul>
+            </nav>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="container">
+        <div class="result-card fade-in">
+            <h1 class="card-title">Analisis Topik Berita</h1>
+            
+            <!-- News Preview -->
+            <div class="news-preview">
+                <div class="news-headline">{{ headline }}</div>
+                <div class="news-article">{{ article }}</div>
+            </div>
+            
+            <!-- Statistics -->
+            <div class="stats-container">
+                <div class="stat-item">
+                    <div class="stat-value">{{ all_categories|length }}</div>
+                    <div class="stat-label">Total Kategori</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-value">{{ "%.1f"|format(top_categories[0].percentage) }}%</div>
+                    <div class="stat-label">Kategori Teratas</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-value">{{ "%.1f"|format(total_confidence) }}%</div>
+                    <div class="stat-label">Total Confidence</div>
+                </div>
+            </div>
+            
+            <!-- Summary Section -->
+            <div class="summary-section">
+                <div class="summary-title">KATEGORI TERATAS</div>
+                <div class="top-category">{{ top_categories[0].name }}</div>
+                <div class="confidence-score">{{ "%.1f"|format(top_categories[0].percentage) }}%</div>
+                <div>Tingkat Keyakinan Prediksi</div>
+            </div>
+            
+            <!-- Analysis Results -->
+            <h2 class="analysis-title">Distribusi Probabilitas Semua Kategori</h2>
+            
+            <div class="categories-container">
+                {% for category in all_categories %}
+                <div class="category-item {% if loop.index <= 3 %}primary-category{% endif %}">
+                    <div class="category-info">
+                        <div class="category-rank rank-{{ loop.index }}">{{ loop.index }}</div>
+                        <div class="category-name">
+                            {{ category.name }}
+                            {% if loop.index == 1 %}
+                            <span class="confidence-badge">Top Prediction</span>
+                            {% endif %}
+                        </div>
+                    </div>
+                    <div class="category-percentage">{{ "%.1f"|format(category.percentage) }}%</div>
+                    <div class="progress-section">
+                        <div class="progress-container">
+                            <div class="progress-bar" data-percentage="{{ category.percentage }}"></div>
+                        </div>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+
+            <!-- Submit News Section - Hanya untuk Admin -->
+            {% if user and user.type == 'admin' %}
+            <div class="submit-news-card">
+                <h3 class="submit-news-title">
+                    <i class="fas fa-newspaper"></i> Submit Berita ke Database
+                    <span class="admin-only-badge">Admin Only</span>
+                </h3>
+                <p class="submit-news-message">
+                    Simpan berita ini beserta hasil kategorisasi ke dalam database untuk publikasi.
+                </p>
+                <form id="submitNewsForm" action="/submit_to_database" method="POST">
+                    <input type="hidden" name="headline" value="{{ headline }}">
+                    <input type="hidden" name="article" value="{{ article }}">
+                    <input type="hidden" name="top_category" value="{{ top_categories[0].name }}">
+                    <input type="hidden" name="confidence_score" value="{{ top_categories[0].percentage }}">
+                    <input type="hidden" name="all_categories" value="{{ all_categories | tojson | safe }}">
+                    
+                    <button type="submit" class="btn btn-success" id="submitNewsBtn">
+                        <i class="fas fa-database"></i> Submit Berita ke Database
+                    </button>
+                </form>
+                <div id="submitResult" style="margin-top: 15px;"></div>
+            </div>
+            {% elif user and user.type != 'admin' %}
+            <!-- Pesan untuk user biasa -->
+            <div class="access-denied-message">
+                <div class="access-denied-icon">
+                    <i class="fas fa-lock"></i>
+                </div>
+                <p class="access-denied-text">
+                    Hanya administrator yang dapat mengirim berita ke database. 
+                    Sebagai user biasa, Anda hanya dapat melihat hasil kategorisasi.
+                </p>
+            </div>
+            {% else %}
+            <!-- Pesan untuk pengunjung belum login -->
+            <div class="access-denied-message">
+                <div class="access-denied-icon">
+                    <i class="fas fa-user-lock"></i>
+                </div>
+                <p class="access-denied-text">
+                    Silakan login untuk mengakses fitur lengkap. Hanya administrator yang dapat mengirim berita ke database.
+                </p>
+            </div>
+            {% endif %}
+            
+            <!-- Action Buttons -->
+            <div class="action-buttons">
+                <a href="/" class="btn btn-primary">
+                    <i class="fas fa-arrow-left"></i> Kembali ke Daftar Berita
+                </a>
+                <a href="/input" class="btn btn-secondary">
+                    <i class="fas fa-plus"></i> Ajukan Berita Baru
+                </a>
+            </div>
+        </div>
+    </main>
+
+    <!-- Footer -->
+    <footer>
+        <div class="container">
+            <p class="copyright">&copy; 2025 NewsPortal By Daflah Tsany Gusra. Powered by Flask, PostgreSQL, Python, Pickle & Machine Learning.</p>
+        </div>
+    </footer>
+
+    <script>
+        // Animate progress bars
+        document.addEventListener('DOMContentLoaded', function() {
+            const progressBars = document.querySelectorAll('.progress-bar');
+            
+            progressBars.forEach((bar, index) => {
+                const percentage = parseFloat(bar.getAttribute('data-percentage'));
+                
+                // Set initial width to 0
+                bar.style.width = '0%';
+                
+                // Animate progress bar after a delay
+                setTimeout(() => {
+                    bar.style.width = percentage + '%';
+                }, 300 + (index * 50));
+                
+                // Add color variation based on percentage
+                if (percentage >= 70) {
+                    bar.style.background = 'linear-gradient(90deg, #00A82D, #00C853)';
+                } else if (percentage >= 30) {
+                    bar.style.background = 'linear-gradient(90deg, #FFA000, #FFC107)';
+                } else {
+                    bar.style.background = 'linear-gradient(90deg, #F44336, #FF9800)';
+                }
+            });
+            
+            // Add hover effects
+            const categoryItems = document.querySelectorAll('.category-item');
+            categoryItems.forEach(item => {
+                item.addEventListener('mouseenter', function() {
+                    this.style.transform = 'translateX(5px)';
+                    this.style.transition = 'transform 0.2s ease';
+                });
+                
+                item.addEventListener('mouseleave', function() {
+                    this.style.transform = 'translateX(0)';
+                });
+            });
+
+            // Handle submit news form dengan AJAX
+            const submitNewsForm = document.getElementById('submitNewsForm');
+            if (submitNewsForm) {
+                submitNewsForm.addEventListener('submit', function(e) {
+                    e.preventDefault(); // Mencegah form submit biasa
+                    
+                    const submitBtn = document.getElementById('submitNewsBtn');
+                    const resultDiv = document.getElementById('submitResult');
+                    
+                    // Update tombol
+                    submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Menyimpan...';
+                    submitBtn.disabled = true;
+                    
+                    // Kirim data via AJAX
+                    fetch('/submit_to_database', {
+                        method: 'POST',
+                        body: new FormData(this)
+                    })
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.success) {
+                            resultDiv.innerHTML = `
+                                <div style="background: #d4edda; color: #155724; padding: 12px; border-radius: 6px; border: 1px solid #c3e6cb;">
+                                    <i class="fas fa-check-circle"></i> ${data.message}
+                                </div>
+                            `;
+                            submitBtn.innerHTML = '<i class="fas fa-check"></i> Berhasil Disimpan';
+                            submitBtn.style.backgroundColor = '#28a745';
+                        } else {
+                            resultDiv.innerHTML = `
+                                <div style="background: #f8d7da; color: #721c24; padding: 12px; border-radius: 6px; border: 1px solid #f5c6cb;">
+                                    <i class="fas fa-exclamation-circle"></i> ${data.message}
+                                </div>
+                            `;
+                            submitBtn.innerHTML = '<i class="fas fa-database"></i> Coba Lagi';
+                            submitBtn.disabled = false;
+                        }
+                    })
+                    .catch(error => {
+                        console.error('Error:', error);
+                        resultDiv.innerHTML = `
+                            <div style="background: #f8d7da; color: #721c24; padding: 12px; border-radius: 6px; border: 1px solid #f5c6cb;">
+                                <i class="fas fa-exclamation-circle"></i> Terjadi kesalahan jaringan.
+                            </div>
+                        `;
+                        submitBtn.innerHTML = '<i class="fas fa-database"></i> Coba Lagi';
+                        submitBtn.disabled = false;
+                    });
+                });
+            }
+        });
+    </script>
+</body>
+</html>
