@@ -95,6 +95,55 @@ nav ul li a:hover {
     line-height: 1.8;
 }
 
+.hero-stats {
+    display: flex;
+    justify-content: center;
+    gap: 40px;
+    margin-top: 30px;
+}
+
+.hero-stats .stat {
+    text-align: center;
+    color: white;
+}
+
+.hero-stats .number {
+    font-size: 2rem;
+    font-weight: 700;
+    margin-bottom: 5px;
+    color: #00A82D;
+}
+
+.hero-stats .label {
+    font-size: 0.9rem;
+    opacity: 0.9;
+}
+
+.categories-preview {
+    display: flex;
+    justify-content: center;
+    flex-wrap: wrap;
+    gap: 10px;
+    margin: 25px 0;
+}
+
+.category-badge {
+    background: rgba(255, 255, 255, 0.15);
+    color: white;
+    padding: 8px 16px;
+    border-radius: 20px;
+    font-size: 0.9rem;
+    font-weight: 600;
+    border: 1px solid rgba(255, 255, 255, 0.3);
+    backdrop-filter: blur(10px);
+    transition: all 0.3s ease;
+}
+
+.category-badge:hover {
+    background: rgba(255, 255, 255, 0.25);
+    transform: translateY(-2px);
+}
+
 /* PERBAIKAN: Tombol Submit News seperti di gambar */
 .cta-buttons {
     display: flex;
@@ -763,6 +812,23 @@ footer {
         padding: 6px 12px;
         font-size: 12px;
     }
+
+    .categories-preview {
+        gap: 8px;
+    }
+    
+    .category-badge {
+        padding: 6px 12px;
+        font-size: 0.8rem;
+    }
+    
+    .hero-stats {
+        gap: 20px;
+    }
+    
+    .hero-stats .number {
+        font-size: 1.5rem;
+    }
 }
 
 @media (max-width: 480px) {
@@ -852,6 +918,20 @@ footer {
     
     .user-name {
         font-size: 12px;
+    }
+
+    .categories-preview {
+        gap: 5px;
+    }
+    
+    .category-badge {
+        padding: 5px 10px;
+        font-size: 0.75rem;
+    }
+    
+    .hero-stats {
+        flex-direction: column;
+        gap: 15px;
     }
 }
 

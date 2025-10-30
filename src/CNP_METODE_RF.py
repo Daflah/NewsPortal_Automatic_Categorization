@@ -23,7 +23,7 @@ import json
 sys.path.append(os.path.join(os.path.dirname(__file__), '..', 'config'))
 import CONFIG
 
-class RandomForestModel:  # ← GANTI NAMA CLASS
+class RandomForestModel: 
     def __init__(self, n_estimators=CONFIG.RF_ESTIMATORS, random_state=CONFIG.RF_RANDOM_STATE):
         self.n_estimators = n_estimators
         self.random_state = random_state
@@ -125,9 +125,9 @@ class RandomForestModel:  # ← GANTI NAMA CLASS
         print("\nClassification Report:")
         print(classification_report(y_test, y_pred, target_names=self.label_encoder.classes_))
         
-        # Cross-validation - HANYA JIKA DATA CUKUP
+        # Cross-validation
         cv_scores = None
-        if len(X_test) >= 5:  # Minimal 5 samples untuk 5-fold CV
+        if len(X_test) >= 5:
             try:
                 cv_scores = cross_val_score(self.model, X_test, y_test, cv=min(5, len(X_test)))
                 print(f"Cross-validation scores: {cv_scores}")

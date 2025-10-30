@@ -22,11 +22,11 @@
             </a>
             <nav>
                 <ul>
-                    <li><a href="/"><i class="fas fa-home"></i> Home</a></li>
-                    <li><a href="/#latest"><i class="fas fa-newspaper"></i> Latest News</a></li>
-                    <li><a href="/#categories"><i class="fas fa-list"></i> Categories</a></li>
-                    <li><a href="/#about"><i class="fas fa-info-circle"></i> About</a></li>
-                    <li><a href="/input"><i class="fas fa-upload"></i> Upload News</a></li>
+                    <li><a href="/"><i class="fas fa-home"></i> Beranda</a></li>
+                    <li><a href="/#latest"><i class="fas fa-newspaper"></i> Berita terbaru</a></li>
+                    <li><a href="/#categories"><i class="fas fa-list"></i> Kategori</a></li>
+                    <li><a href="/#about"><i class="fas fa-info-circle"></i> Tentang</a></li>
+                    <li><a href="/input"><i class="fas fa-upload"></i> Unggah Berita</a></li>
                     
                     <!-- 🔐 LOGIN/LOGOUT BUTTON -->
                     {% if user %}
@@ -54,19 +54,19 @@
     <main class="container">
         <!-- News Submission Form -->
         <section class="form-container" id="form">
-            <h2 class="form-title">Submit Your News Article</h2>
+            <h2 class="form-title">Unggah Artikel Berita Anda</h2>
             <form id="newsForm" action="/submit_news" method="POST">
                 <div class="form-group">
-                    <label for="headline">News Headline</label>
-                    <input type="text" id="headline" name="headline" placeholder="Enter news headline here…" required>
+                    <label for="headline">Judul Berita</label>
+                    <input type="text" id="headline" name="headline" placeholder="Masukkan judul berita di sini..." required>
                 </div>
                 
                 <div class="form-group">
-                    <label for="article">News Article</label>
-                    <textarea id="article" name="article" placeholder="Write your news article here…" required></textarea>
+                    <label for="article">Isi Artikel Berita</label>
+                    <textarea id="article" name="article" placeholder="Tulis isi artikel berita Anda di sini..." required></textarea>
                 </div>
                 
-                <button type="submit" class="submit-btn">Submit News Article</button>
+                <button type="submit" class="submit-btn">Kirim Artikel Berita</button>
             </form>
         </section>
     </main>
@@ -80,12 +80,12 @@
             </div>
             
             <div class="footer-section">
-                <h3>Quick Links</h3>
+                <h3>Links</h3>
                 <ul>
-                    <li><a href="/">Home</a></li>
-                    <li><a href="/#categories">News Categories</a></li>
-                    <li><a href="/submit_news">Submit News</a></li>
-                    <li><a href="/#about">Careers</a></li>
+                    <li><a href="/">Beranda</a></li>
+                    <li><a href="/#categories">Kategori Berita</a></li>
+                    <li><a href="/submit_news">Unggah Berita</a></li>
+                    <li><a href="/#about">Tentang NewsPortal</a></li>
                 </ul>
             </div>
             
@@ -105,28 +105,260 @@
     </footer>
 
     <script>
-        document.getElementById('newsForm').addEventListener('submit', function(e) {
-            // Tampilkan loading indicator
-            const submitBtn = this.querySelector('.submit-btn');
-            submitBtn.textContent = 'Processing...';
-            submitBtn.disabled = true;
+        // Fungsi validasi form
+        function validateForm(headline, article) {
+            const errors = [];
+            
+            // Validasi headline
+            if (!headline.trim()) {
+                errors.push('Judul berita tidak boleh kosong');
+            } else if (headline.trim().length < 50) {
+                errors.push('Judul berita minimal 50 karakter');
+            }
+            
+            // Validasi article
+            if (!article.trim()) {
+                errors.push('Isi berita tidak boleh kosong');
+            } else if (article.trim().length < 400) {
+                errors.push('Isi berita minimal 400 karakter');
+            }
+            
+            return errors;
+        }
+
+        // Fungsi untuk menampilkan modal error validasi
+        function showValidationErrorModal(errors) {
+            const modal = document.createElement('div');
+            modal.className = 'login-modal';
+            modal.innerHTML = `
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h3>Validasi Error</h3>
+                        <button class="close-modal">&times;</button>
+                    </div>
+                    <div class="modal-body">
+                        <i class="fas fa-exclamation-circle"></i>
+                        <p>Harap perbaiki kesalahan berikut:</p>
+                        <ul style="text-align: left; margin: 15px 0; padding-left: 20px; color: #dc2626;">
+                            ${errors.map(error => `<li>${error}</li>`).join('')}
+                        </ul>
+                    </div>
+                    <div class="modal-footer">
+                        <button class="btn-primary" onclick="closeModal()">Mengerti</button>
+                    </div>
+                </div>
+            `;
+            
+            document.body.appendChild(modal);
+            
+            // Close modal handlers
+            modal.querySelector('.close-modal').addEventListener('click', closeModal);
+            modal.addEventListener('click', function(e) {
+                if (e.target === modal) closeModal();
+            });
+            
+            // Prevent body scroll when modal is open
+            document.body.style.overflow = 'hidden';
+        }
+
+        // Fungsi untuk menampilkan counter karakter
+        function setupCharacterCounters() {
+            const headlineInput = document.getElementById('headline');
+            const articleInput = document.getElementById('article');
+            
+            // Create counter elements
+            const headlineCounter = document.createElement('div');
+            headlineCounter.className = 'char-counter';
+            headlineCounter.style.cssText = 'text-align: right; font-size: 12px; color: #6b7280; margin-top: 5px;';
+            
+            const articleCounter = document.createElement('div');
+            articleCounter.className = 'char-counter';
+            articleCounter.style.cssText = 'text-align: right; font-size: 12px; color: #6b7280; margin-top: 5px;';
+            
+            // Insert counters after inputs
+            headlineInput.parentNode.appendChild(headlineCounter);
+            articleInput.parentNode.appendChild(articleCounter);
+            
+            // Update counters
+            function updateCounters() {
+                const headlineLength = headlineInput.value.length;
+                const articleLength = articleInput.value.length;
+                
+                headlineCounter.textContent = `${headlineLength} karakter`;
+                
+                articleCounter.textContent = `${articleLength} karakter`;
+            }
+            
+            // Add event listeners
+            headlineInput.addEventListener('input', updateCounters);
+            articleInput.addEventListener('input', updateCounters);
+            
+            // Initial update
+            updateCounters();
+        }
+
+        async function checkLoginStatus() {
+            try {
+                const response = await fetch('/check_auth');
+                const data = await response.json();
+                return data;
+            } catch (error) {
+                console.error('Error checking login status:', error);
+                return { is_authenticated: false, user_type: 'none' };
+            }
+        }
+
+        // Fungsi untuk tampilkan modal login required
+        function showLoginRequiredModal() {
+            const modal = document.createElement('div');
+            modal.className = 'login-modal';
+            modal.innerHTML = `
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h3>Login Required</h3>
+                        <button class="close-modal">&times;</button>
+                    </div>
+                    <div class="modal-body">
+                        <i class="fas fa-exclamation-triangle"></i>
+                        <p>Anda harus login terlebih dahulu untuk mengirim berita.</p>
+                        <p>Silakan login atau daftar akun baru untuk menggunakan fitur ini.</p>
+                    </div>
+                    <div class="modal-footer">
+                        <button class="btn-secondary" onclick="closeModal()">Nanti Saja</button>
+                        <button class="btn-primary" onclick="redirectToLogin()">Login Sekarang</button>
+                    </div>
+                </div>
+            `;
+            
+            document.body.appendChild(modal);
+            
+            // Close modal handlers
+            modal.querySelector('.close-modal').addEventListener('click', closeModal);
+            modal.addEventListener('click', function(e) {
+                if (e.target === modal) closeModal();
+            });
+            
+            // Prevent body scroll when modal is open
+            document.body.style.overflow = 'hidden';
+        }
+
+        function closeModal() {
+            const modal = document.querySelector('.login-modal');
+            if (modal) {
+                modal.remove();
+                // Restore body scroll
+                document.body.style.overflow = '';
+            }
+        }
+
+        function redirectToLogin() {
+            window.location.href = '/login';
+        }
+
+        // Handle form submission - DENGAN VALIDASI TAMBAHAN
+        document.addEventListener('DOMContentLoaded', function() {
+            // Setup character counters
+            setupCharacterCounters();
+            
+            const newsForm = document.getElementById('newsForm');
+            if (newsForm) {
+                newsForm.addEventListener('submit', async function(e) {
+                    e.preventDefault(); // Prevent immediate submission
+                    
+                    // Get form values
+                    const headline = document.getElementById('headline').value;
+                    const article = document.getElementById('article').value;
+                    
+                    // Validasi form
+                    const validationErrors = validateForm(headline, article);
+                    if (validationErrors.length > 0) {
+                        showValidationErrorModal(validationErrors);
+                        return;
+                    }
+                    
+                    // Cek status login user
+                    const authStatus = await checkLoginStatus();
+                    
+                    if (!authStatus.is_authenticated) {
+                        // Tampilkan modal login required
+                        showLoginRequiredModal();
+                        return;
+                    }
+                    
+                    // Jika user sudah login dan validasi passed, lanjutkan dengan submission langsung
+                    console.log('User is authenticated, submitting form...');
+                    console.log('Submitted by:', authStatus.user_name);
+                    console.log('Headline length:', headline.length);
+                    console.log('Article length:', article.length);
+                    
+                    // Tampilkan loading indicator
+                    const submitBtn = this.querySelector('.submit-btn');
+                    const originalText = submitBtn.textContent;
+                    submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Processing...';
+                    submitBtn.disabled = true;
+                    
+                    // Submit form secara langsung
+                    this.submit();
+                });
+            }
         });
 
-        // Smooth scroll untuk anchor links
-        document.querySelectorAll('a[href^="#"]').forEach(anchor => {
-            anchor.addEventListener('click', function (e) {
-                e.preventDefault();
-                const target = document.querySelector(this.getAttribute('href'));
-                if (target) {
-                    const headerHeight = document.querySelector('header').offsetHeight;
-                    const targetPosition = target.getBoundingClientRect().top + window.pageYOffset - headerHeight;
-                    
-                    window.scrollTo({
-                        top: targetPosition,
-                        behavior: 'smooth'
-                    });
-                }
+        // Fungsi untuk menampilkan modal error
+        function showErrorModal(message) {
+            const modal = document.createElement('div');
+            modal.className = 'login-modal';
+            modal.innerHTML = `
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h3>Error</h3>
+                        <button class="close-modal">&times;</button>
+                    </div>
+                    <div class="modal-body">
+                        <i class="fas fa-exclamation-circle"></i>
+                        <p>${message}</p>
+                    </div>
+                    <div class="modal-footer">
+                        <button class="btn-primary" onclick="closeModal()">Tutup</button>
+                    </div>
+                </div>
+            `;
+            
+            document.body.appendChild(modal);
+            
+            // Close modal handlers
+            modal.querySelector('.close-modal').addEventListener('click', closeModal);
+            modal.addEventListener('click', function(e) {
+                if (e.target === modal) closeModal();
             });
+            
+            // Prevent body scroll when modal is open
+            document.body.style.overflow = 'hidden';
+        }
+
+        // Smooth scroll untuk anchor links
+        document.addEventListener('DOMContentLoaded', function() {
+            document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+                anchor.addEventListener('click', function (e) {
+                    e.preventDefault();
+                    const target = document.querySelector(this.getAttribute('href'));
+                    if (target) {
+                        const headerHeight = document.querySelector('header').offsetHeight;
+                        const targetPosition = target.getBoundingClientRect().top + window.pageYOffset - headerHeight;
+                        
+                        window.scrollTo({
+                            top: targetPosition,
+                            behavior: 'smooth'
+                        });
+                    }
+                });
+            });
+        });
+
+        // Tambahkan event listener untuk Escape key untuk menutup modal
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'Escape') {
+                closeModal();
+            }
         });
     </script>
 </body>

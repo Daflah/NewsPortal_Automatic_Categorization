@@ -671,22 +671,68 @@ def input_page():
     
     return render_template('CNP_INPUT_PAGE.html', user=user_info)
 
+@app.route('/check_auth')
+def check_auth():
+    """API endpoint untuk cek status authentication user"""
+    user_info = get_user_info()
+    return jsonify({
+        'is_authenticated': user_info is not None,
+        'user_type': user_info['type'] if user_info else 'none',
+        'user_name': user_info['name'] if user_info else ''
+    })
+
 @app.route('/submit_news', methods=['POST'])
 def submit_news():
-    """Endpoint untuk submit berita dan klasifikasi"""
+    """Endpoint untuk submit berita dan klasifikasi - DENGAN VALIDASI LOGIN DAN VALIDASI INPUT"""
+
+    # 🔐 CEK APAKAH USER SUDAH LOGIN
+    user_info = get_user_info()
+    if not user_info:
+        return jsonify({
+            'success': False,
+            'message': 'Anda harus login terlebih dahulu untuk mengirim berita dan mencoba kategorisasi berita',
+            'redirect': '/login'
+        }), 401
+    
     if not models:
-        return "❌ Models belum diload. Silakan cek console untuk error.", 500
+        return jsonify({
+            'success': False,
+            'message': '❌ Models belum diload. Silakan cek console untuk error.'
+        }), 500
     
     try:
         # Get input text dari form
-        headline = request.form.get('headline', '')
-        article = request.form.get('article', '')
+        headline = request.form.get('headline', '').strip()
+        article = request.form.get('article', '').strip()
         
         print(f"Headline diterima: {headline}")
         print(f"Article diterima: {article[:100]}...")
+        print(f"Headline length: {len(headline)}")
+        print(f"Article length: {len(article)}")
+        print(f"👤 Submitted by user: {user_info['name']} ({user_info['email']})")
         
-        if not headline.strip() or not article.strip():
-            return "❌ Headline dan artikel tidak boleh kosong!", 400
+        # 🔍 VALIDASI INPUT DI BACKEND
+        validation_errors = []
+        
+        # Validasi headline
+        if not headline:
+            validation_errors.append('Judul berita tidak boleh kosong')
+        elif len(headline) < 50:
+            validation_errors.append('Judul berita minimal 50 karakter')
+        
+        # Validasi article
+        if not article:
+            validation_errors.append('Isi berita tidak boleh kosong')
+        elif len(article) < 400:
+            validation_errors.append('Isi berita minimal 400 karakter')
+        
+        # Jika ada error validasi, return error
+        if validation_errors:
+            return jsonify({
+                'success': False,
+                'message': 'Validasi gagal',
+                'errors': validation_errors
+            }), 400
         
         # Gabungkan headline dan article untuk diproses
         news_text = f"{headline}. {article}"
@@ -736,15 +782,6 @@ def submit_news():
         print(f"📈 Confidence: {confidence:.2f}%")
         print(f"📊 Total categories found: {len(all_categories)}")
         print(f"🏆 Top category: {top_categories[0]['name']} ({top_categories[0]['percentage']:.2f}%)")
-        print(f"📋 All categories:")
-        for i, cat in enumerate(all_categories[:10], 1):  # Print first 10 categories
-            print(f"   {i:2d}. {cat['name']}: {cat['percentage']:.2f}%")
-        
-        if len(all_categories) > 10:
-            print(f"   ... and {len(all_categories) - 10} more categories")
-        
-        # 🔐 PERBAIKI: Gunakan function terpusat
-        user_info = get_user_info()
         
         # Kirim data ke output page
         return render_template('CNP_OUTPUT_PAGE.html',
@@ -776,9 +813,6 @@ def submit_news():
             {"name": "Sport", "percentage": 0.2, "index": 6},
             {"name": "Edukasi", "percentage": 0.1, "index": 7},
         ]
-        
-        # 🔐 PERBAIKI: Gunakan function terpusat
-        user_info = get_user_info()
         
         return render_template('CNP_OUTPUT_PAGE.html',
                              headline=headline or "Contoh Berita: Tren Gaya Hidup Modern",
@@ -1291,65 +1325,5 @@ def internal_error(error):
 # ===============================
 
 if __name__ == '__main__':
-    print("🚀 Starting NewsPortal Flask Application...")
-    print("=" * 50)
-    
-    # Test database connection
-    print("🔗 Testing database connection...")
-    db_stats = news_db.get_database_stats()
-    if db_stats:
-        print(f"✅ Database connected! Total articles: {db_stats.get('total_articles', 0)}")
-        print(f"📊 Categories: {db_stats.get('categories', {})}")
-    else:
-        print("❌ Database connection failed!")
-    
-    # 🔐 INITIALIZE USERS TABLE - PASTIKAN INI DIEKSEKUSI
-    print("👥 Initializing users table...")
-    if user_db.create_users_table():
-        print("✅ Users table ready")
-        
-        # Test jika admin user ada
-        admin_user = user_db.authenticate_user("admin@newsportal.com", "admin123")
-        if admin_user:
-            print("✅ Default admin user verified")
-        else:
-            print("⚠️  Default admin user not accessible")
-    else:
-        print("❌ Users table initialization failed")
-    
-    # Load models saat startup
-    if load_models():
-        print("🌐 Starting Flask server...")
-        print("📧 Access the application at: http://localhost:5000")
-        print("🔐 Default Admin Login:")
-        print("   Email: admin@newsportal.com")
-        print("   Password: admin123")
-        print("🏷️  Available categories:", list(LABEL_MAPPING.keys()))
-        print("📊 Total categories:", len(LABEL_MAPPING))
-        print("=" * 50)
-        print("📍 Routes Available:")
-        print("   - GET  /              → Halaman Utama dengan Database")
-        print("   - GET  /login         → Halaman Login")
-        print("   - GET  /signup        → Halaman Sign Up")
-        print("   - POST /api/login     → API Login")
-        print("   - POST /api/signup    → API Sign Up")
-        print("   - GET  /logout        → Logout")
-        print("   - GET  /category/<name> → Filter Berita by Category") 
-        print("   - GET  /search        → Pencarian Berita")
-        print("   - GET  /article/<id>  → Detail Artikel dari Database")
-        print("   - GET  /input         → Halaman Input Berita (CNP_INPUT_PAGE)")
-        print("   - POST /submit_news   → Proses Klasifikasi Berita")
-        print("   - GET  /output        → Halaman Output (redirect ke input)")
-        print("   - GET  /health        → Status Aplikasi + Database")
-        print("   - GET  /api/articles  → API Get Articles")
-        print("   - GET  /api/categories → API Get Categories")
-        print("   - GET  /api/stats     → API Database Stats")
-        print("   - GET  /labels        → Info Label Mapping")
-        print("   - GET  /test-prediction → Test Prediksi")
-        print("   - GET  /model-info    → Info Model")
-        print("=" * 50)
-        
-        app.run(debug=True, host='0.0.0.0', port=5000)
-    else:
-        print("❌ Failed to start application due to model loading error")
-        sys.exit(1)
+    port = int(os.environ.get('PORT', 7860))
+    app.run(host='0.0.0.0', port=port, debug=False)

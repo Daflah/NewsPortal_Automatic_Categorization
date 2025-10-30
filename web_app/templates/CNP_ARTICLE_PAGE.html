@@ -22,11 +22,11 @@
             </a>
             <nav>
                 <ul>
-                    <li><a href="/"><i class="fas fa-home"></i> Home</a></li>
-                    <li><a href="/#latest"><i class="fas fa-newspaper"></i> Latest News</a></li>
-                    <li><a href="/#categories"><i class="fas fa-list"></i> Categories</a></li>
-                    <li><a href="/#about"><i class="fas fa-info-circle"></i> About</a></li>
-                    <li><a href="/input"><i class="fas fa-upload"></i> Upload News</a></li>
+                    <li><a href="/"><i class="fas fa-home"></i> Beranda</a></li>
+                    <li><a href="/#latest"><i class="fas fa-newspaper"></i> Berita terbaru</a></li>
+                    <li><a href="/#categories"><i class="fas fa-list"></i> Kategori</a></li>
+                    <li><a href="/#about"><i class="fas fa-info-circle"></i> Tentang</a></li>
+                    <li><a href="/input"><i class="fas fa-upload"></i> Unggah Berita</a></li>
                     
                     <!-- 🔐 LOGIN/LOGOUT BUTTON -->
                     {% if user %}
@@ -53,7 +53,7 @@
     <!-- Breadcrumb -->
     <div class="container">
         <div class="breadcrumb">
-            <a href="/">Home</a>
+            <a href="/">Beranda</a>
             <span>/</span>
             {% if article %}
             <a href="/category/{{ article.category }}">{{ article.category }}</a>
@@ -232,22 +232,23 @@
                 </div>
                 
                 <div class="footer-section">
-                    <h3>Quick Links</h3>
+                    <h3>Links</h3>
                     <ul>
-                        <li><a href="/">Home</a></li>
-                        <li><a href="/input">Submit News</a></li>
-                        <li><a href="/#categories">News Categories</a></li>
-                        <li><a href="/#about">About System</a></li>
+                        <li><a href="/">Beranda</a></li>
+                        <li><a href="/input">Unggah Berita</a></li>
+                        <li><a href="/#categories">Kategori Berita</a></li>
+                        <li><a href="/#about">Tentang NewsPortal</a></li>
                     </ul>
                 </div>
                 
                 <div class="footer-section">
-                    <h3>Technology Stack</h3>
+                    <h3>Teknologi yang digunakan</h3>
                     <ul>
                         <li><a href="#">PostgreSQL Database</a></li>
                         <li><a href="#">Flask Backend</a></li>
-                        <li><a href="#">Machine Learning</a></li>
+                        <li><a href="#">Random Forest</a></li>
                         <li><a href="#">Latent Dirichlet Allocation</a></li>
+                        <li><a href="#">PostgreSQL</a></li>
                     </ul>
                 </div>
             </div>

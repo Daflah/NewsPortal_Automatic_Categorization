@@ -22,11 +22,11 @@
             </a>
             <nav>
                 <ul>
-                    <li><a href="#home"><i class="fas fa-home"></i> Home</a></li>
-                    <li><a href="#latest"><i class="fas fa-newspaper"></i> Latest News</a></li>
-                    <li><a href="#categories"><i class="fas fa-list"></i> Categories</a></li>
-                    <li><a href="#about"><i class="fas fa-info-circle"></i> About</a></li>
-                    <li><a href="/input"><i class="fas fa-upload"></i> Upload News</a></li>
+                    <li><a href="/"><i class="fas fa-home"></i> Beranda</a></li>
+                    <li><a href="#latest"><i class="fas fa-newspaper"></i> Berita terbaru</a></li>
+                    <li><a href="#categories"><i class="fas fa-list"></i> Kategori</a></li>
+                    <li><a href="#about"><i class="fas fa-info-circle"></i> Tentang</a></li>
+                    <li><a href="/input"><i class="fas fa-upload"></i> Unggah Berita</a></li>
                     
                     <!-- 🔐 LOGIN/LOGOUT BUTTON -->
                     {% if user %}
@@ -53,14 +53,31 @@
     <!-- Hero Section -->
     <section class="hero" id="home">
         <div class="container">
-            <h1>Share Your Story With The World</h1>
-            <p>Submit your news articles and be part of our global news community.<br>Quality journalism matters.</p>
+            <h1>Sistem Kategorisasi Berita Berbasis AI</h1>
+            <p>
+                Upload berita Anda dan biarkan teknologi LDA dan Random Forest untuk mengkategorikannya secara otomatis ke dalam <strong>9 kategori utama</strong> dengan akurasi tinggi
+            </p>
+            
+            <div class="categories-preview">
+                <div class="category-badge">Teknologi</div>
+                <div class="category-badge">Otomotif</div>
+                <div class="category-badge">Sport</div>
+                <div class="category-badge">Lifestyle</div>
+                <div class="category-badge">Finance</div>
+                <div class="category-badge">Health</div>
+                <div class="category-badge">Edukasi</div>
+                <div class="category-badge">Nasional</div>
+                <div class="category-badge">Travel</div>
+            </div>
+            
+            <br>
+
             <div class="cta-buttons">
                 <a href="/input" class="cta-button">
-                    <i class="fas fa-upload"></i> Submit News
+                    <i class="fas fa-upload"></i> Coba Sekarang
                 </a>
-                <a href="#latest" class="cta-button outline">
-                    <i class="fas fa-newspaper"></i> Read Latest
+                <a href="#categories" class="cta-button outline">
+                    <i class="fas fa-list"></i> Lihat Kategori
                 </a>
             </div>
         </div>
@@ -265,7 +282,7 @@
         <section class="about-section" id="about">
             <div class="about-content">
                 <div class="about-text">
-                    <h2>About NewsPortal</h2>
+                    <h2>Tentang NewsPortal</h2>
                     <p>NewsPortal adalah platform berita yang dikembangkan oleh Daflah Tsany Gusra, mahasiswa Teknik Informatika Universitas Tarumanagara, sebagai bagian dari tugas akhir. Proyek ini dibimbing oleh Ibu Ir. Jeanny Pragantha, M.Eng. dan Bapak Novario Jaya Perdana, S.Kom., M.T.</p>
                     <p>Website ini menggunakan dua metode Machine Learning, Latent Dirichlet Allocation (LDA) dan Random Forest untuk menganalisis dan mengelompokkan berita secara otomatis. NewsPortal menghadirkan cara dalam memahami kategori berita secara cepat.</p>
                     
@@ -322,17 +339,17 @@
                 </div>
                 
                 <div class="footer-section">
-                    <h3>Quick Links</h3>
+                    <h3>Links</h3>
                     <ul>
-                        <li><a href="/">Home</a></li>
-                        <li><a href="/input">Submit News</a></li>
-                        <li><a href="#categories">News Categories</a></li>
-                        <li><a href="#about">About System</a></li>
+                        <li><a href="/">Beranda</a></li>
+                        <li><a href="/input">Unggah Berita</a></li>
+                        <li><a href="#categories">Kategori Berita</a></li>
+                        <li><a href="#about">Tentang NewsPortal</a></li>
                     </ul>   
                 </div>
                 
                 <div class="footer-section">
-                    <h3>Categories</h3>
+                    <h3>Kategori</h3>
                     <ul>
                         {% for category in categories[:8] %}
                         <li><a href="/category/{{ category.name }}">{{ category.name }}</a></li>
@@ -348,18 +365,23 @@
     </footer>
 
     <script>
-        // Smooth scroll untuk semua anchor links
+        // Reset scroll ke top setiap page load
+        document.addEventListener('DOMContentLoaded', function() {
+            window.scrollTo(0, 0);
+        });
+
+        // Smooth scroll untuk anchor links
         document.querySelectorAll('a[href^="#"]').forEach(anchor => {
             anchor.addEventListener('click', function (e) {
-                // Skip jika href adalah "#" saja
-                if (this.getAttribute('href') === '#') return;
+                if (this.getAttribute('href') === '#' || this.getAttribute('href') === '/') {
+                    return;
+                }
                 
                 e.preventDefault();
                 const targetId = this.getAttribute('href').substring(1);
                 const target = document.getElementById(targetId);
                 
                 if (target) {
-                    // Hitung offset untuk navbar sticky
                     const headerHeight = document.querySelector('header').offsetHeight;
                     const targetPosition = target.getBoundingClientRect().top + window.pageYOffset - headerHeight;
                     
@@ -367,9 +389,6 @@
                         top: targetPosition,
                         behavior: 'smooth'
                     });
-                    
-                    // Update URL tanpa reload page
-                    history.pushState(null, null, `#${targetId}`);
                 }
             });
         });
@@ -377,19 +396,9 @@
         // Active state untuk category navigation
         document.querySelectorAll('.category-item').forEach(item => {
             item.addEventListener('click', function(e) {
-                // Remove active class from all category items
                 document.querySelectorAll('.category-item').forEach(i => i.classList.remove('active'));
-                // Add active class to clicked item
                 this.classList.add('active');
             });
-        });
-
-        // Auto-focus search input
-        document.addEventListener('DOMContentLoaded', function() {
-            const searchInput = document.querySelector('.search-input');
-            if (searchInput) {
-                searchInput.focus();
-            }
         });
 
         // Update active nav link berdasarkan scroll position

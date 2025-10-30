@@ -60,7 +60,7 @@ class TextPreprocessor:
         return text
     
     def preprocess_text(self, text):
-        """Pipeline preprocessing lengkap"""
+        """Pipeline preprocessing"""
         cleaned = self.clean_text(text)
         if not cleaned:
             return []
@@ -77,12 +77,12 @@ class TextPreprocessor:
             print(f"Stemming error: {e}")
             stemmed = tokens
         
-        # Stopword removal and filter short tokens
+        # Stopword removal dan filter short tokens
         filtered_tokens = [
             token for token in stemmed 
             if token not in self.stopwords 
             and len(token) > 2
-            and token.isalpha()  # Hanya kata yang terdiri dari huruf
+            and token.isalpha() 
         ]
         
         return filtered_tokens

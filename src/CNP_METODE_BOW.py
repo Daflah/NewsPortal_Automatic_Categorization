@@ -51,21 +51,21 @@ class BOWTransformer:
         print("🔄 Mengkonversi tokens ke string...")
         documents_as_strings = [' '.join(tokens) for tokens in documents]
         
-        # Hitung statistik dasar
+        # statistik dasar
         total_tokens = sum(len(tokens) for tokens in documents)
         avg_tokens_per_doc = total_tokens / len(documents)
         print(f"📝 Total tokens: {total_tokens:,}")
         print(f"📝 Rata-rata tokens per dokumen: {avg_tokens_per_doc:.1f}")
         
-        # Inisialisasi CountVectorizer dengan optimasi untuk dataset besar
+        # Inisialisasi CountVectorizer
         print("⚙️  Menginisialisasi CountVectorizer...")
         self.vectorizer = CountVectorizer(
             max_features=self.max_features,
             min_df=self.min_df,
             max_df=self.max_df,
-            stop_words=None,  # Karena sudah dihandle di preprocessing
-            dtype=np.int32,   # Optimasi memory
-            lowercase=False   # Karena sudah lowercase di preprocessing
+            stop_words=None,
+            dtype=np.int32,
+            lowercase=False
         )
         
         # Fit dan transform documents
@@ -331,7 +331,7 @@ def save_bow_for_lda(bow_matrix, vocabulary, filename="bow_for_lda.csv"):
     
     print(f"💾 Menyimpan BOW untuk LDA...")
     
-    # Hanya simpan BOW matrix tanpa metadata (format untuk LDA)
+    # format untuk LDA
     bow_dense = bow_matrix.toarray()
     bow_df = pd.DataFrame(bow_dense, columns=vocabulary)
     

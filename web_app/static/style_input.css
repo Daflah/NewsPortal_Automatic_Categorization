@@ -195,6 +195,51 @@ nav ul li a:hover {
     .user-name {
         font-size: 12px;
     }
+
+    .login-modal .modal-content {
+        padding: 24px 20px;
+        margin: 20px;
+        border-radius: 12px;
+    }
+    
+    .login-modal .modal-header h3 {
+        font-size: 1.3rem;
+    }
+    
+    .login-modal .modal-body {
+        margin: 20px 0;
+    }
+    
+    .login-modal .modal-body i {
+        font-size: 48px;
+    }
+    
+    .login-modal .modal-body p {
+        font-size: 15px;
+    }
+    
+    .login-modal .modal-body p:first-of-type {
+        font-size: 16px;
+    }
+    
+    .login-modal .modal-footer {
+        flex-direction: column;
+        gap: 12px;
+        margin-top: 25px;
+    }
+    
+    .login-modal .btn-primary,
+    .login-modal .btn-secondary {
+        width: 100%;
+        min-width: auto;
+        padding: 12px 24px;
+    }
+    
+    .login-modal .close-modal {
+        width: 36px;
+        height: 36px;
+        font-size: 24px;
+    }
 }
 
 /* Form Styles - DIPERLEBAR */
@@ -478,4 +523,307 @@ footer {
     .news-section {
         margin: 50px 0 40px;
     }
+}
+
+/* Modal Styles [New adding] */
+.login-modal {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.7);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 10000;
+    animation: fadeIn 0.3s ease;
+    backdrop-filter: blur(5px);
+}
+
+.login-modal .modal-content {
+    background: white;
+    padding: 30px;
+    border-radius: 16px;
+    max-width: 420px;
+    width: 90%;
+    text-align: center;
+    box-shadow: 0 25px 50px rgba(0, 0, 0, 0.3);
+    animation: slideUp 0.3s ease;
+    border: 1px solid #e5e7eb;
+    border-top: 6px solid #00A82D; /* Green border top */
+}
+
+.login-modal .modal-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+    border-bottom: 2px solid #f3f4f6;
+    padding-bottom: 15px;
+}
+
+.login-modal .modal-header h3 {
+    margin: 0;
+    color: #00A82D; /* Green color */
+    font-size: 1.5rem;
+    font-weight: 700;
+}
+
+.login-modal .close-modal {
+    background: none;
+    border: none;
+    font-size: 28px;
+    cursor: pointer;
+    color: #9ca3af;
+    transition: all 0.3s ease;
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.login-modal .close-modal:hover {
+    color: #00A82D; /* Green color on hover */
+    background: #f0f9f0; /* Light green background */
+}
+
+.login-modal .modal-body {
+    margin: 25px 0;
+    padding: 0 10px;
+}
+
+.login-modal .modal-body i {
+    font-size: 56px;
+    margin-bottom: 20px;
+    display: block;
+}
+
+.login-modal .modal-body i.fa-exclamation-triangle {
+    color: #00A82D; /* Green color */
+}
+
+.login-modal .modal-body i.fa-exclamation-circle {
+    color: #00A82D; /* Green color for errors too */
+}
+
+.login-modal .modal-body p {
+    margin: 12px 0;
+    color: #4b5563;
+    line-height: 1.6;
+    font-size: 16px;
+}
+
+.login-modal .modal-body p:first-of-type {
+    font-weight: 600;
+    color: #00A82D; /* Green color */
+    font-size: 18px;
+}
+
+.login-modal .modal-footer {
+    margin-top: 30px;
+    display: flex;
+    gap: 15px;
+    justify-content: center;
+}
+
+.login-modal .btn-primary,
+.login-modal .btn-secondary {
+    border: none;
+    padding: 14px 28px;
+    border-radius: 8px;
+    cursor: pointer;
+    font-weight: 600;
+    font-size: 15px;
+    transition: all 0.3s ease;
+    min-width: 140px;
+    font-family: 'Open Sans', sans-serif;
+}
+
+/* GREEN THEME BUTTONS */
+.login-modal .btn-primary {
+    background: linear-gradient(135deg, #00A82D, #008C26); /* Green gradient */
+    color: white;
+    box-shadow: 0 4px 12px rgba(0, 168, 45, 0.3); /* Green shadow */
+    border: 2px solid #00A82D;
+}
+
+.login-modal .btn-primary:hover {
+    background: linear-gradient(135deg, #008C26, #007722); /* Darker green */
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(0, 140, 38, 0.4); /* Green shadow */
+}
+
+.login-modal .btn-secondary {
+    background: linear-gradient(135deg, #6b7280, #4b5563);
+    color: white;
+    box-shadow: 0 4px 12px rgba(107, 114, 128, 0.3);
+    border: 2px solid #6b7280;
+}
+
+.login-modal .btn-secondary:hover {
+    background: linear-gradient(135deg, #4b5563, #374151);
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(107, 114, 128, 0.4);
+}
+
+/* Loading spinner untuk submit button */
+.submit-btn:disabled {
+    opacity: 0.8;
+    cursor: not-allowed;
+}
+
+.fa-spin {
+    animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+}
+
+@keyframes slideUp {
+    from { 
+        opacity: 0;
+        transform: translateY(30px) scale(0.95);
+    }
+    to { 
+        opacity: 1;
+        transform: translateY(0) scale(1);
+    }
+}
+
+/* Success modal styles - GREEN THEME */
+.login-modal .modal-body i.fa-check-circle {
+    color: #00A82D; /* Green color */
+    font-size: 56px;
+}
+
+/* Tablet styles */
+@media (min-width: 481px) and (max-width: 768px) {
+    .login-modal .modal-content {
+        max-width: 380px;
+        padding: 28px;
+    }
+}
+
+/* Dark mode support */
+@media (prefers-color-scheme: dark) {
+    .login-modal .modal-content {
+        background: #1f2937;
+        border-color: #374151;
+        border-top-color: #00A82D; /* Keep green border in dark mode */
+    }
+    
+    .login-modal .modal-header h3 {
+        color: #00A82D; /* Keep green in dark mode */
+    }
+    
+    .login-modal .modal-header {
+        border-bottom-color: #374151;
+    }
+    
+    .login-modal .modal-body p {
+        color: #d1d5db;
+    }
+    
+    .login-modal .modal-body p:first-of-type {
+        color: #00A82D; /* Keep green in dark mode */
+    }
+    
+    .login-modal .close-modal {
+        color: #9ca3af;
+    }
+    
+    .login-modal .close-modal:hover {
+        color: #00A82D; /* Green in dark mode */
+        background: #1a331a; /* Dark green background */
+    }
+}
+
+/* Responsive Design untuk Modal */
+@media (max-width: 480px) {
+    .login-modal .modal-content {
+        padding: 24px 20px;
+        margin: 20px;
+        border-radius: 12px;
+    }
+    
+    .login-modal .modal-header h3 {
+        font-size: 1.3rem;
+    }
+    
+    .login-modal .modal-body {
+        margin: 20px 0;
+    }
+    
+    .login-modal .modal-body i {
+        font-size: 48px;
+    }
+    
+    .login-modal .modal-body p {
+        font-size: 15px;
+    }
+    
+    .login-modal .modal-body p:first-of-type {
+        font-size: 16px;
+    }
+    
+    .login-modal .modal-footer {
+        flex-direction: column;
+        gap: 12px;
+        margin-top: 25px;
+    }
+    
+    .login-modal .btn-primary,
+    .login-modal .btn-secondary {
+        width: 100%;
+        min-width: auto;
+        padding: 12px 24px;
+    }
+    
+    .login-modal .close-modal {
+        width: 36px;
+        height: 36px;
+        font-size: 24px;
+    }
+}
+
+/* Character Counter Styles */
+.char-counter {
+    text-align: right;
+    font-size: 12px;
+    color: #6b7280;
+    margin-top: 5px;
+    font-weight: 500;
+}
+
+input:valid, textarea:valid {
+    border-color: #10b981;
+}
+
+/* Focus states for better UX */
+.form-group:focus-within label {
+    color: #00A82D;
+    font-weight: 700;
+}
+
+/* Additional modal styles for validation errors */
+.login-modal .modal-body ul {
+    text-align: left;
+    margin: 15px 0;
+    padding-left: 20px;
+    color: #dc2626;
+}
+
+.login-modal .modal-body li {
+    margin-bottom: 8px;
+    line-height: 1.4;
 }
