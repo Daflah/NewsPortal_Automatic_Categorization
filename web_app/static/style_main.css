@@ -630,6 +630,23 @@ nav ul li a:hover {
     border-color: rgba(255, 255, 255, 0.4);
 }
 
+nav ul li {
+    display: flex;
+    align-items: center;
+}
+
+nav ul li a,
+.login-btn-nav {
+    display: flex;
+    align-items: center;
+    height: 40px;
+}
+
+.login-btn-nav {
+    padding: 6px 16px; 
+    line-height: 1;
+}
+
 /* Welcome message untuk user yang login */
 .user-welcome {
     text-align: center;

@@ -1320,6 +1320,10 @@ def internal_error(error):
     user_info = get_user_info()
     return render_template('CNP_MAIN_PAGE.html', user=user_info), 500
 
+# Load Models
+print("🟢 Loading models at startup...")
+load_models()
+
 # ===============================
 # MAIN APPLICATION
 # ===============================

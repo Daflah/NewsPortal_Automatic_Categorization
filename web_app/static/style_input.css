@@ -132,6 +132,23 @@ nav ul li a:hover {
     opacity: 0.9;
 }
 
+nav ul li {
+    display: flex;
+    align-items: center;
+}
+
+nav ul li a,
+.login-btn-nav {
+    display: flex;
+    align-items: center;
+    height: 40px;
+}
+
+.login-btn-nav {
+    padding: 6px 16px; 
+    line-height: 1;
+}
+
 /* Responsive Design untuk Navbar */
 @media (max-width: 768px) {
     .header-content {

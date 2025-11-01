@@ -1,16 +1,14 @@
 ---
-title: News Portal Classification
-emoji: 📰
-colorFrom: blue
-colorTo: green
-sdk: docker
-app_port: 7860
-pinned: false
+title: News Portal Categorization
+Theme Color: Green and Cream
+Campus: Tarumanagara University
+by: Daflah Tsany Gusra
+NIM: 535220177
 ---
 
 # News Portal Classification
 
-Aplikasi web untuk klasifikasi berita menggunakan Flask, LDA Topic Modeling, dan Random Forest Classification.
+Aplikasi web untuk Kategorisasi berita menggunakan Flask, LDA Topic Modeling, dan Random Forest Classification.
 
 ## Features
 - Klasifikasi kategori berita otomatis
