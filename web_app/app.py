@@ -6,6 +6,10 @@ import numpy as np
 from flask import Flask, request, render_template, redirect, url_for, jsonify, session
 from datetime import datetime
 import hashlib
+from werkzeug.utils import secure_filename
+import pandas as pd
+from pathlib import Path
+import csv
 
 # Get the absolute path to the current directory
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
@@ -16,6 +20,25 @@ from DATABASE import db_config
 
 app = Flask(__name__)
 app.secret_key = 'newsportal-secret-key-2024'  # 🔑 ADD SECRET KEY FOR SESSION
+
+# ---------------------------------
+# Upload configuration (Newest)
+# ---------------------------------
+UPLOAD_FOLDER = os.path.join(BASE_DIR, 'uploads')
+ALLOWED_EXTENSIONS = {'csv', 'xlsx', 'xls'}
+
+Path(UPLOAD_FOLDER).mkdir(exist_ok=True)
+app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
+app.config['MAX_CONTENT_LENGTH'] = 50 * 1024 * 1024  # 50MB
+
+def allowed_file(filename):
+    # filename: string, contoh "data_berita.csv"
+    if '.' not in filename:
+        return False
+    
+    ext = filename.rsplit('.', 1)[1].lower()   # ambil bagian setelah titik
+    return ext in ALLOWED_EXTENSIONS
+
 
 # Global variables untuk models
 models = {}
@@ -242,6 +265,49 @@ class NewsDatabase:
         finally:
             if conn:
                 conn.close()
+
+    def bulk_import_articles(self, articles_list):
+        """Import banyak artikel sekaligus ke database."""
+        imported = 0
+        skipped = 0
+        errors = []
+
+        # gunakan db_config.get_connection(), BUKAN self.get_connection()
+        conn = self.db_config.get_connection()
+        cursor = conn.cursor()
+
+        for art in articles_list:
+            try:
+                cursor.execute(
+                    """
+                    INSERT INTO news_articles (title, content, category, link, time)
+                    VALUES (%s, %s, %s, %s, %s)
+                    """,
+                    (
+                        art['title'],
+                        art['content'],
+                        art['category'],
+                        art['link'],
+                        art['time']
+                    )
+                )
+                imported += 1
+            except Exception as e:
+                conn.rollback()
+                skipped += 1
+                errors.append(str(e))
+            else:
+                conn.commit()
+
+        cursor.close()
+        conn.close()
+
+        return {
+            'success': True,
+            'imported': imported,
+            'skipped': skipped,
+            'errors': errors
+        }
 
 # 🔐 USER DATABASE CLASS YANG DIPERBAIKI
 class UserDatabase:
@@ -473,6 +539,87 @@ def get_user_info():
     
     return None
 
+def bulk_import_articles(self, articles_list):
+    """
+    Import multiple articles dari dataset
+    articles_list: list of dicts dengan keys: title, content, category, link, time
+    """
+    conn = self.db_config.get_connection()
+    if not conn:
+        return {'success': False, 'error': 'Database connection failed', 'imported': 0}
+    
+    try:
+        cur = conn.cursor()
+        imported_count = 0
+        skipped_count = 0
+        errors = []
+        
+        for article in articles_list:
+            try:
+                # Validasi data
+                if not article.get('title') or not article.get('content'):
+                    skipped_count += 1
+                    continue
+                
+                # Sanitasi input
+                title = article.get('title', '').strip()[:500]
+                content = article.get('content', '').strip()[:5000]
+                category = article.get('category', 'nasional').strip().lower()
+                link = article.get('link', '').strip()[:500]
+                time = article.get('time') or datetime.now()
+                
+                # Buat content hash untuk deteksi duplikasi
+                content_hash = hashlib.md5(content.encode()).hexdigest()
+                
+                # Cek duplikasi berdasarkan title
+                cur.execute(
+                    "SELECT id FROM news_articles WHERE title = %s LIMIT 1",
+                    (title,)
+                )
+                
+                if cur.fetchone() is None:
+                    # Insert data baru
+                    try:
+                        cur.execute("""
+                            INSERT INTO news_articles (title, content, category, link, time)
+                            VALUES (%s, %s, %s, %s, %s)
+                        """, (title, content, category, link, time))
+                        imported_count += 1
+                    except:
+                        # Jika kolom content_hash ada
+                        cur.execute("""
+                            INSERT INTO news_articles (title, content, category, link, time, content_hash)
+                            VALUES (%s, %s, %s, %s, %s, %s)
+                        """, (title, content, category, link, time, content_hash))
+                        imported_count += 1
+                else:
+                    skipped_count += 1
+                    
+            except Exception as e:
+                print(f"⚠️ Skip row: {str(e)}")
+                errors.append(f"Row error: {str(e)}")
+                skipped_count += 1
+                continue
+        
+        conn.commit()
+        cur.close()
+        
+        print(f"✅ Import Summary - Imported: {imported_count}, Skipped: {skipped_count}")
+        
+        return {
+            'success': True,
+            'imported': imported_count,
+            'skipped': skipped_count,
+            'errors': errors[:5]  # Batasi hanya 5 error pertama
+        }
+        
+    except Exception as e:
+        print(f"❌ Bulk import error: {e}")
+        return {'success': False, 'error': str(e), 'imported': 0}
+    finally:
+        if conn:
+            conn.close()
+
 # ===============================
 # 🔐 AUTHENTICATION ROUTES
 # ===============================
@@ -680,6 +827,396 @@ def check_auth():
         'user_type': user_info['type'] if user_info else 'none',
         'user_name': user_info['name'] if user_info else ''
     })
+
+# ------------------------------------
+# Route (Newest)
+# ------------------------------------
+@app.route('/admin/dataset')
+def admin_dataset():
+    """Halaman admin untuk manage dataset"""
+    user_info = get_user_info()
+    
+    # Cek apakah user adalah admin
+    if not user_info or not user_info['is_admin']:
+        return redirect(url_for('login_page'))
+    
+    return render_template('CNP_ADMIN_DATASET.html', user=user_info)
+
+def smart_read_file(filepath, filename):
+    """Cerdas membaca file CSV/Excel dengan handling berbagai format"""
+    try:
+        if filename.endswith('.csv'):
+            # Coba berbagai encoding untuk CSV
+            encodings = ['utf-8', 'latin-1', 'cp1252', 'iso-8859-1']
+            for encoding in encodings:
+                try:
+                    df = pd.read_csv(filepath, encoding=encoding)
+                    print(f"✅ CSV read berhasil dengan encoding: {encoding}")
+                    break
+                except UnicodeDecodeError:
+                    continue
+                except Exception as e:
+                    print(f"⚠️ Encoding {encoding} gagal: {e}")
+                    continue
+            else:
+                raise Exception("Gagal membaca file CSV dengan semua encoding yang dicoba")
+        else:  # xlsx/xls
+            try:
+                # Coba baca semua sheet
+                excel_file = pd.ExcelFile(filepath)
+                print(f"📄 Excel sheets: {excel_file.sheet_names}")
+                
+                # Coba sheet pertama
+                df = excel_file.parse(excel_file.sheet_names[0])
+                print(f"✅ Excel file read successfully from sheet: {excel_file.sheet_names[0]}")
+            except Exception as e:
+                print(f"❌ Error membaca Excel: {e}")
+                raise
+        
+        # Bersihkan dataframe
+        df = clean_dataframe(df)
+        
+        return df
+    except Exception as e:
+        print(f"❌ Error reading file: {e}")
+        import traceback
+        traceback.print_exc()
+        raise
+
+def clean_dataframe(df):
+    """Bersihkan dataframe dari NaN, empty rows, dan format yang tidak diharapkan"""
+    # Buat salinan
+    df = df.copy()
+    
+    # Hapus baris yang semua kolomnya NaN
+    df = df.dropna(how='all')
+    
+    # Reset index
+    df = df.reset_index(drop=True)
+    
+    # Konversi semua kolom ke string, tapi jaga tipe data asli untuk data yang valid
+    for col in df.columns:
+        # Coba konversi ke string, tapi simpan data asli jika mungkin
+        try:
+            # Cek jika kolom berisi list atau array
+            if df[col].apply(lambda x: isinstance(x, (list, dict, tuple))).any():
+                print(f"⚠️ Kolom {col} berisi tipe data kompleks (list/dict/tuple)")
+                # Konversi ke string representation
+                df[col] = df[col].apply(lambda x: str(x) if pd.notna(x) else '')
+        except Exception as e:
+            print(f"⚠️ Error processing column {col}: {e}")
+            df[col] = df[col].astype(str)
+    
+    print(f"📊 DataFrame cleaned: shape={df.shape}")
+    print(f"📊 Columns: {list(df.columns)}")
+    print(f"📊 Sample data:")
+    if not df.empty:
+        for i, col in enumerate(df.columns):
+            sample = df[col].iloc[0] if not df.empty else "EMPTY"
+            print(f"   {col}: {str(sample)[:100]}...")
+    
+    return df
+
+
+def validate_and_fix_dataframe(df):
+    """Cek struktur DataFrame dan coba perbaiki jika hanya 1 kolom panjang."""
+    print(f"\n📊 DF awal untuk validasi: shape={df.shape}, cols={list(df.columns)}")
+    
+    # Jika DataFrame kosong
+    if df.empty:
+        print("❌ DataFrame kosong!")
+        return df
+    
+    # Jika hanya 1 kolom dan data terlihat seperti CSV dengan delimiter yang salah
+    if len(df.columns) == 1 and len(df) > 1:
+        col_name = df.columns[0]
+        print(f"⚠️ Hanya 1 kolom ({col_name}), coba split dengan delimiter...")
+        
+        # Ambil sample data
+        sample_data = str(df.iloc[0, 0]) if pd.notna(df.iloc[0, 0]) else ""
+        print(f"📝 Sample data (pertama): {sample_data[:200]}...")
+        
+        # Coba berbagai delimiter
+        delimiters = [',', ';', '\t', '|', '||']
+        
+        best_df = df
+        best_delim = None
+        
+        for delim in delimiters:
+            try:
+                # Split kolom pertama berdasarkan delimiter
+                split_df = df[col_name].astype(str).str.split(delim, expand=True)
+                
+                # Cek hasil split
+                if split_df.shape[1] > 1:
+                    print(f"   Delimiter '{delim}': menghasilkan {split_df.shape[1]} kolom")
+                    
+                    # Bersihkan hasil split
+                    split_df = split_df.apply(lambda x: x.str.strip() if x.dtype == "object" else x)
+                    
+                    # Update column names
+                    new_cols = [f"col_{i}" for i in range(split_df.shape[1])]
+                    split_df.columns = new_cols
+                    
+                    best_df = split_df
+                    best_delim = delim
+                    
+                    # Cek jika kolom pertama kelihatan seperti header
+                    first_row_values = split_df.iloc[0].tolist()
+                    if all(isinstance(val, str) and val for val in first_row_values):
+                        print(f"   Baris pertama kelihatan seperti header: {first_row_values}")
+                        # Gunakan baris pertama sebagai header
+                        header_row = split_df.iloc[0]
+                        split_df = split_df[1:].reset_index(drop=True)
+                        split_df.columns = header_row
+                        best_df = split_df
+                        print(f"   ✅ Set header dari baris pertama: {list(split_df.columns)}")
+                    
+                    break
+                    
+            except Exception as e:
+                print(f"   Delimiter '{delim}' gagal: {e}")
+                continue
+        
+        if best_delim:
+            print(f"✅ Berhasil split dengan delimiter '{best_delim}'")
+            df = best_df
+        else:
+            print("❌ Tidak ada delimiter yang berhasil")
+    
+    print(f"📊 DF setelah validasi: shape={df.shape}")
+    print(f"📊 Columns final: {list(df.columns)}")
+    
+    return df
+
+@app.route('/api/admin/upload-dataset', methods=['POST'])
+def api_upload_dataset():
+    """API endpoint untuk upload dataset (admin only)"""
+    user_info = get_user_info()
+    
+    # CEK AUTHORIZATION
+    if not user_info or not user_info.get('is_admin'):
+        return jsonify({
+            'success': False,
+            'message': 'Anda tidak memiliki akses. Hanya admin yang dapat mengupload dataset.'
+        }), 403
+    
+    try:
+        # Cek file ada
+        if 'file' not in request.files:
+            return jsonify({
+                'success': False,
+                'message': 'File tidak ditemukan dalam request'
+            }), 400
+        
+        file = request.files['file']
+        
+        if file.filename == '':
+            return jsonify({
+                'success': False,
+                'message': 'File tidak dipilih'
+            }), 400
+        
+        # Cek extension file
+        if not allowed_file(file.filename):
+            return jsonify({
+                'success': False,
+                'message': f'Format file tidak diperbolehkan. Gunakan: {", ".join(ALLOWED_EXTENSIONS)}'
+            }), 400
+        
+        # Simpan file sementara
+        filename = secure_filename(file.filename)
+        timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
+        filename = f"{timestamp}_{filename}"
+        filepath = os.path.join(app.config['UPLOAD_FOLDER'], filename)
+        file.save(filepath)
+        
+        print(f"📁 File uploaded: {filepath}")
+        
+        # Parse file menggunakan pandas - DENGAN ERROR HANDLING YANG BENAR
+        try:
+            if filename.endswith('.csv'):
+                # Coba beberapa cara baca CSV
+                df = None
+                errors = []
+                
+                # Method 1: Default UTF-8
+                try:
+                    df = pd.read_csv(filepath, encoding='utf-8')
+                    print("✅ CSV read dengan UTF-8")
+                except Exception as e1:
+                    errors.append(f"UTF-8: {str(e1)}")
+                    
+                    # Method 2: Latin-1 encoding
+                    try:
+                        df = pd.read_csv(filepath, encoding='latin-1')
+                        print("✅ CSV read dengan Latin-1")
+                    except Exception as e2:
+                        errors.append(f"Latin-1: {str(e2)}")
+                        
+                        # Method 3: With error handling
+                        try:
+                            df = pd.read_csv(filepath, encoding='utf-8', on_bad_lines='skip')
+                            print("✅ CSV read dengan skip bad lines")
+                        except Exception as e3:
+                            errors.append(f"Skip bad lines: {str(e3)}")
+                
+                if df is None:
+                    raise Exception(f"Gagal membaca CSV. Errors: {'; '.join(errors)}")
+            else:
+                # Excel file
+                df = pd.read_excel(filepath)
+                print("✅ Excel file read")
+            
+            print(f"📊 Dataframe shape: {df.shape}")
+            print(f"📋 Columns: {list(df.columns)}")
+
+            df.columns = [str(col).strip() for col in df.columns]
+
+            # === NORMALISASI CSV/EXCEL SATU KOLOM ===
+            if len(df.columns) == 1:
+                col0 = df.columns[0]
+                first_val = str(df.iloc[0, 0])
+                print("⚠️ Single-column DF. col0:", col0)
+                print("⚠️ Sample first_val:", first_val[:120])
+
+                if ',' in first_val:
+                    # split isi baris jadi 5 kolom
+                    temp = df[col0].astype(str).str.split(',', n=4, expand=True)
+                    temp.columns = ['Title', 'Link', 'Category', 'Time', 'Content']
+                    df = temp
+                    print("✅ Split from row values, columns:", list(df.columns))
+                elif ',' in col0:
+                    # kalau header yang gabung
+                    new_cols = [c.strip() for c in col0.split(',')]
+                    if len(new_cols) == df.shape[1]:
+                        df.columns = new_cols
+                        print("✅ Split from header, columns:", list(df.columns))
+
+            print(f"📊 DF setelah normalisasi: {df.shape}, cols={list(df.columns)}")
+
+            
+        except Exception as e:
+            print(f"❌ Error reading file: {e}")
+            return jsonify({
+                'success': False,
+                'message': f'Gagal membaca file: {str(e)}'
+            }), 400
+        
+        # Mapping kolom - DENGAN CASE-INSENSITIVE MATCHING
+        column_mapping = {
+            'title':   ['title', 'judul', 'headline'],
+            'content': ['content', 'isi', 'article', 'body'],
+            'category':['category', 'kategori'],
+            'link':    ['link', 'url', 'source'],
+            'time':    ['time', 'date', 'tanggal', 'waktu'],
+        }
+
+        actual_columns = {}
+        cols_lower = {str(c).lower(): str(c) for c in df.columns}
+        print("DEBUG columns lower:", cols_lower)
+
+        for key, names in column_mapping.items():
+            for name in names:
+                name_l = name.lower()
+                if name_l in cols_lower:
+                    actual_columns[key] = cols_lower[name_l]
+                    break
+
+        required_keys = ['title', 'content']
+        missing_keys = [k for k in required_keys if k not in actual_columns]
+        
+        if missing_keys:
+            print(f"❌ Missing columns: {missing_keys}")
+            print(f"Available columns: {list(df.columns)}")
+            return jsonify({
+                'success': False,
+                'message': f'Kolom yang diperlukan tidak ditemukan: {", ".join(missing_keys)}. Kolom tersedia: {", ".join(df.columns)}'
+            }), 400
+        
+        # Transform data
+        articles_list = []
+        for idx, row in df.iterrows():
+            try:
+                # Ambil data dengan safe method
+                title_col = actual_columns.get('title')
+                content_col = actual_columns.get('content')
+                category_col = actual_columns.get('category')
+                link_col = actual_columns.get('link')
+                time_col = actual_columns.get('time')
+                
+                title = str(row.get(title_col, '')).strip() if title_col else ''
+                content = str(row.get(content_col, '')).strip() if content_col else ''
+                category = str(row.get(category_col, 'nasional')).strip().capitalize() #Capitalize
+                link = str(row.get(link_col, '')).strip() if link_col else f'auto_{idx}'
+                time_raw = row.get(time_col) if time_col else None
+                # Normalisasi time
+                if pd.isna(time_raw) or not str(time_raw).strip():
+                    time_val = datetime.now()
+                else:
+                    try:
+                        # hapus prefix "Tayang:" jika ada
+                        time_str = str(time_raw).replace('Tayang:', '').replace('Tayang :', '').strip()
+                        time_val = parser.parse(time_str, dayfirst=True)
+                    except Exception:
+                        time_val = datetime.now()
+                
+                # Validasi minimal
+                title = str(row.get(title_col, '') or '').strip()
+                content = str(row.get(content_col, '') or '').strip()
+
+                if len(title) < 3 or len(content) < 10:
+                    continue
+                
+                article = {
+                    'title': title,
+                    'content': content,
+                    'category': category,
+                    'link': link,
+                    'time': time_val
+                }
+                
+                articles_list.append(article)
+                
+            except Exception as e:
+                print(f"⚠️ Skip row {idx}: {str(e)}")
+                continue
+        
+        if not articles_list:
+            print(f"❌ No valid articles found in file")
+            return jsonify({
+                'success': False,
+                'message': 'File tidak mengandung data artikel yang valid. Pastikan Title (min 5 char) dan Content (min 20 char) terisi.'
+            }), 400
+        
+        print(f"📈 Total articles to import: {len(articles_list)}")
+        
+        # Bulk import ke database
+        result = news_db.bulk_import_articles(articles_list)
+        
+        # Clean up - hapus file setelah import
+        try:
+            os.remove(filepath)
+            print(f"🗑️ Temporary file deleted")
+        except Exception as e:
+            print(f"⚠️ Could not delete temp file: {e}")
+        
+        return jsonify({
+            'success': result.get('success', True),
+            'message': f"Berhasil mengimport {result.get('imported', 0)} berita. Dilewati: {result.get('skipped', 0)}",
+            'imported': result.get('imported', 0),
+            'skipped': result.get('skipped', 0),
+            'errors': result.get('errors', [])
+        })
+        
+    except Exception as e:
+        print(f"❌ Upload error: {e}")
+        import traceback
+        traceback.print_exc()
+        return jsonify({
+            'success': False,
+            'message': f'Terjadi kesalahan: {str(e)}'
+        }), 500
 
 @app.route('/submit_news', methods=['POST'])
 def submit_news():

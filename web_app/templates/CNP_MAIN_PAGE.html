@@ -79,6 +79,11 @@
                 <a href="#categories" class="cta-button outline">
                     <i class="fas fa-list"></i> Lihat Kategori
                 </a>
+                {% if user and user.is_admin %}
+                    <a href="/admin/dataset" class="cta-button">
+                        <i class="fas fa-database"></i> Admin Dataset
+                    </a>
+                {% endif %}
             </div>
         </div>
     </section>

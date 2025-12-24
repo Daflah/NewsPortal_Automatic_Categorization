@@ -1,0 +1,316 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin - Manajemen Dataset | NewsPortal</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href='https://fonts.googleapis.com/css?family=Open+Sans:400,600,700&display=swap' rel='stylesheet'>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style_admin_dataset.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='style_main.css') }}">
+</head>
+<body>
+    <!-- Header/Navbar -->
+    <header>
+        <div class="container">
+            <div class="header-content">
+                <a href="/" class="logo">
+                    <svg width="32" height="32" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M16 30C23.732 30 30 23.732 30 16C30 8.26801 23.732 2 16 2C8.26801 2 2 8.26801 2 16C2 23.732 8.26801 30 16 30Z" stroke="white" stroke-width="2"/>
+                        <path d="M15.9999 22.3999C19.5345 22.3999 22.3999 19.5345 22.3999 15.9999C22.3999 12.4653 19.5345 9.59985 15.9999 9.59985C12.4653 9.59985 9.59985 12.4653 9.59985 15.9999C9.59985 19.5345 12.4653 22.3999 15.9999 22.3999Z" stroke="white" stroke-width="2"/>
+                        <path d="M16 19.2C17.7673 19.2 19.2 17.7673 19.2 16C19.2 14.2327 17.7673 12.8 16 12.8C14.2327 12.8 12.8 14.2327 12.8 16C12.8 17.7673 14.2327 19.2 16 19.2Z" fill="white"/>
+                    </svg>
+                    NewsPortal
+                </a>
+                <nav>
+                    <ul>
+                        <li><a href="/"><i class="fas fa-home"></i> Beranda</a></li>
+                        <li><a href="/input"><i class="fas fa-upload"></i> Unggah Berita</a></li>
+                        {% if user %}
+                            <li class="user-info-header">
+                                <span class="user-name">
+                                    <i class="fas fa-user-circle"></i> {{ user.name }}
+                                </span>
+                                <a href="/logout" class="logout-btn">
+                                    <i class="fas fa-sign-out-alt"></i> Keluar
+                                </a>
+                            </li>
+                        {% else %}
+                            <li><a href="/login" class="login-btn-nav"><i class="fas fa-sign-in-alt"></i> Masuk</a></li>
+                        {% endif %}
+                    </ul>
+                </nav>
+            </div>
+        </div>
+    </header>
+
+    <!-- Hero Section -->
+    <section class="admin-hero">
+        <div class="container">
+            <h1><i class="fas fa-database"></i> Manajemen Dataset NewsPortal</h1>
+            <p>Unggah file Excel atau CSV untuk menambahkan artikel berita ke database dengan jumlah yang banyak</p>
+        </div>
+    </section>
+
+    <!-- Main Content -->
+    <div class="admin-container">
+        <div class="admin-content">
+            <!-- Alert Container -->
+            <div id="alertContainer"></div>
+
+            <!-- File Info -->
+            <div class="file-info" id="fileInfo">
+                <div class="file-name" id="fileName"></div>
+                <div class="file-size" id="fileSize"></div>
+            </div>
+
+            <!-- Upload Zone -->
+            <div class="upload-zone" id="uploadZone">
+                <div class="upload-zone-icon">
+                    <i class="fas fa-cloud-upload-alt"></i>
+                </div>
+                <h3>Seret & Lepas File Di Sini</h3>
+                <p>atau klik untuk memilih file (maksimal 50MB)</p>
+                <input type="file" id="fileInput" class="file-input" accept=".xlsx,.xls,.csv">
+                <button class="btn-upload" onclick="document.getElementById('fileInput').click()">
+                    <i class="fas fa-folder-open"></i> Pilih File
+                </button>
+            </div>
+
+            <!-- Progress Bar -->
+            <div class="progress-container" id="progressContainer">
+                <div class="progress-label">Progres Unggahan...</div>
+                <div class="progress">
+                    <div class="progress-bar" id="progressBar" style="width: 0%">0%</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Stats Section -->
+        <div class="stats-section">
+            <h3>
+                <i class="fas fa-chart-bar"></i> Statistik Database
+            </h3>
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <div class="stat-number" id="totalArticles">-</div>
+                    <div class="stat-label">Total Berita</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-number" id="totalCategories">-</div>
+                    <div class="stat-label">Kategori</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Help Section -->
+        <div class="help-section">
+            <h3>
+                <i class="fas fa-question-circle"></i> Panduan Format File
+            </h3>
+            <ul class="help-list">
+                <li><strong>Format File:</strong> Excel (.xlsx, .xls) atau CSV</li>
+                <li><strong>Kolom Wajib:</strong> Title (Judul) dan Content (Isi Berita)</li>
+                <li><strong>Kolom Opsional:</strong> Category (Kategori), Link, dan Time (Waktu)</li>
+                <li><strong>Encoding:</strong> UTF-8 (untuk file CSV)</li>
+                <li><strong>Ukuran Maksimal:</strong> 50 MB per file</li>
+                <li><strong>Deteksi Duplikasi:</strong> Sistem otomatis mendeteksi berita yang sudah ada</li>
+                <li><strong>Kategori Valid:</strong> teknologi, otomotif, sport, lifestyle, finance, health, education, nasional, travel</li>
+            </ul>
+        </div>
+    </div>
+
+    <!-- Footer -->
+    <footer>
+        <div class="container">
+            <div class="footer-content">
+                <div class="footer-section">
+                    <h3>NewsPortal AI</h3>
+                    <p>Platform berita cerdas dengan teknologi AI untuk klasifikasi otomatis</p>
+                </div>
+                
+                <div class="footer-section">
+                    <h3>Links</h3>
+                    <ul>
+                        <li><a href="/">Beranda</a></li>
+                        <li><a href="/input">Unggah Berita</a></li>
+                        <li><a href="#categories">Kategori Berita</a></li>
+                        <li><a href="#about">Tentang NewsPortal</a></li>
+                    </ul>   
+                </div>
+
+                <div class="footer-section">
+                    <h3>Kategori</h3>
+                    <ul>
+                        <li><a href="/category/Sport">Sport</a></li>
+                        <li><a href="/category/Otomotif">Otomotif</a></li>
+                        <li><a href="/category/Finance">Finance</a></li>
+                        <li><a href="/category/Edukasi">Edukasi</a></li>
+                        <li><a href="/category/Health">Health</a></li>
+                        <li><a href="/category/Travel">Travel</a></li>
+                        <li><a href="/category/Lifestyle">Lifestyle</a></li>
+                        <li><a href="/category/Teknologi">Teknologi</a></li>
+                    </ul>
+                </div>
+            </div>
+            <div class="copyright">
+                <p>&copy; 2025 NewsPortal By Daflah Tsany Gusra. Powered by Flask, PostgreSQL, Python, Pickle & Machine Learning.</p>
+            </div>
+        </div>
+    </footer>
+
+    <script>
+        const uploadZone = document.getElementById('uploadZone');
+        const fileInput = document.getElementById('fileInput');
+        const alertContainer = document.getElementById('alertContainer');
+        const progressContainer = document.getElementById('progressContainer');
+        const progressBar = document.getElementById('progressBar');
+        const fileInfo = document.getElementById('fileInfo');
+        const fileName = document.getElementById('fileName');
+        const fileSize = document.getElementById('fileSize');
+
+        // Drag & Drop Events
+        uploadZone.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            uploadZone.classList.add('dragover');
+        });
+
+        uploadZone.addEventListener('dragleave', (e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            uploadZone.classList.remove('dragover');
+        });
+
+        uploadZone.addEventListener('drop', (e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            uploadZone.classList.remove('dragover');
+
+            const files = e.dataTransfer.files;
+            if (files.length > 0) {
+                handleFile(files[0]);
+            }
+        });
+
+        fileInput.addEventListener('change', () => {
+            if (fileInput.files.length > 0) {
+                handleFile(fileInput.files[0]);
+            }
+        });
+
+        function handleFile(file) {
+            // Display file info
+            fileName.textContent = `📄 ${file.name}`;
+            fileSize.textContent = `Ukuran: ${(file.size / 1024 / 1024).toFixed(2)} MB`;
+            fileInfo.classList.add('show');
+
+            // Upload file
+            uploadFile(file);
+        }
+
+        function uploadFile(file) {
+            const formData = new FormData();
+            formData.append('file', file);
+
+            progressContainer.classList.add('show');
+            alertContainer.innerHTML = '';
+            progressBar.style.width = '0%';
+            progressBar.textContent = '0%';
+
+            // Simulate progress
+            let progress = 0;
+            const interval = setInterval(() => {
+                if (progress < 90) {
+                    progress += Math.random() * 30;
+                    progressBar.style.width = progress + '%';
+                    progressBar.textContent = Math.round(progress) + '%';
+                }
+            }, 300);
+
+            fetch('/api/admin/upload-dataset', {
+                method: 'POST',
+                body: formData
+            })
+            .then(response => response.json())
+            .then(data => {
+                clearInterval(interval);
+                progressContainer.classList.remove('show');
+                progressBar.style.width = '100%';
+                progressBar.textContent = '100%';
+
+                const alertDiv = document.createElement('div');
+                const isSuccess = data.success;
+                alertDiv.className = `alert alert-${isSuccess ? 'success' : 'error'}`;
+
+                const icon = isSuccess ? 'fa-check-circle' : 'fa-exclamation-circle';
+                const title = isSuccess ? 'Berhasil!' : 'Gagal!';
+
+                let message = data.message || 'Terjadi kesalahan saat memproses file.';
+                let details = '';
+
+                if (data.imported > 0) {
+                    details += `<br>📈 <strong>Diimport:</strong> ${data.imported} berita`;
+                }
+                if (data.skipped > 0) {
+                    details += `<br>⏭️ <strong>Dilewati:</strong> ${data.skipped} baris`;
+                }
+                if (data.errors && data.errors.length > 0) {
+                    details += `<br>⚠️ <strong>Error:</strong> ${data.errors.slice(0, 2).join(', ')}`;
+                }
+
+                alertDiv.innerHTML = `
+                    <div class="alert-icon">
+                        <i class="fas ${icon}"></i>
+                    </div>
+                    <div class="alert-content">
+                        <div class="alert-title">${title}</div>
+                        <div class="alert-message">${message}${details}</div>
+                    </div>
+                `;
+
+                alertContainer.appendChild(alertDiv);
+
+                // Reset file input
+                fileInput.value = '';
+                fileInfo.classList.remove('show');
+
+                // Reload stats
+                setTimeout(loadStats, 500);
+            })
+            .catch(error => {
+                clearInterval(interval);
+                progressContainer.classList.remove('show');
+
+                const alertDiv = document.createElement('div');
+                alertDiv.className = 'alert alert-error';
+                alertDiv.innerHTML = `
+                    <div class="alert-icon">
+                        <i class="fas fa-times-circle"></i>
+                    </div>
+                    <div class="alert-content">
+                        <div class="alert-title">Error</div>
+                        <div class="alert-message">${error.message || 'Terjadi kesalahan jaringan'}</div>
+                    </div>
+                `;
+                alertContainer.appendChild(alertDiv);
+            });
+        }
+
+        function loadStats() {
+            fetch('/api/stats')
+                .then(response => response.json())
+                .then(data => {
+                    document.getElementById('totalArticles').textContent =
+                        (data.total_articles || 0).toLocaleString('id-ID');
+                    document.getElementById('totalCategories').textContent =
+                        Object.keys(data.categories || {}).length;
+                })
+                .catch(err => console.error('Gagal memuat stats:', err));
+        }
+
+        // Load stats on page load
+        window.addEventListener('load', loadStats);
+    </script>
+</body>
+</html>
